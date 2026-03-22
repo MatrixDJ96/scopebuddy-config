@@ -36,6 +36,7 @@ scopebuddy/
 │   ├── steam/      # per-AppID configs (numeric filename)
 │   └── lutris/     # per-game configs (slug filename)
 ├── mangohud/       # MangoHud config and presets
+├── assets/         # bundled DLLs / installers
 ├── docs/           # reference documentation
 ├── tests/          # launch behaviour tests, run by tests/run.sh
 └── tools/          # lint / format / form / doc checks
@@ -96,3 +97,4 @@ Run the gates in [`AGENTS.md`](AGENTS.md) § Build & run before committing.
 - ScopeBuddy launcher, tested with 1.5.0; Proton-CachyOS or Proton-GE. The
   tested builds are in [`docs/reference.md`](docs/reference.md) § Proton variant
   support.
+- Git LFS for `assets/`.

@@ -36,7 +36,8 @@ before the `.conf` writes it into the prefix or a gamescope flag.
 | Constant                                                                                                             | Value                                           |
 | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | `SCOPEBUDDY_PATH`                                                                                                    | `${SCB_CONFIGDIR}`                              |
-| `MANGOHUD_PATH`, `GAMES_PATH`                                                                                        | subdirs of `SCOPEBUDDY_PATH`                    |
+| `MANGOHUD_PATH`, `ASSETS_PATH`, `GAMES_PATH`                                                                         | subdirs of `SCOPEBUDDY_PATH`                    |
+| `PHYSX_LEGACY_BINARY`                                                                                                | bundled assets under `ASSETS_PATH`              |
 | `SCB_PREFIX_COLOR`, `SCB_SUCCESS_COLOR`, `SCB_WARNING_COLOR`, `SCB_ERROR_COLOR`, `SCB_INFO_COLOR`, `SCB_RESET_COLOR` | ANSI colors of the `[SCB]` log lines            |
 
 ## Globals (`globals.sh`)
@@ -44,6 +45,8 @@ before the `.conf` writes it into the prefix or a gamescope flag.
 | Global                                           | Value                                                                                                                                                                                                       |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `COMPAT_TOOL_PATH`                               | first `STEAM_COMPAT_TOOL_PATHS` entry, else `PROTONPATH`                                                                                                                                                    |
+| `COMPAT_WINE_BINARY`, `COMPAT_WINETRICKS_BINARY` | tools inside `COMPAT_TOOL_PATH`                                                                                                                                                                             |
+| `WINEPREFIX`                                     | `WINEPREFIX` from the launch environment, else `${STEAM_COMPAT_DATA_PATH}/pfx` (not exported when built from `STEAM_COMPAT_DATA_PATH`: only the `helpers/wine.sh` helpers pass it to a command), else empty |
 
 ## Functions
 
@@ -169,13 +172,34 @@ holds (launch options, an earlier layer); Proton appends
 Choosing an SR preset always sets the RR override too: it takes the explicit RR
 letter when one is given, and `render_preset_latest` otherwise.
 
-### `helpers/game.sh`: game executable
+### `helpers/wine.sh`: Wine prefix commands and registry
+
+| Function                      | Purpose                                                                                                                                                                                                                                                                                                                                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `execute_prefix_command`      | Run a command inside `WINEPREFIX` with wine on `PATH`                                                                                                                                                                                                                                                                                                                                            |
+| `execute_prefix_command_once` | `<name> <command>...`: the same, gated by a `${WINEPREFIX}/.<name>` flag file; logs an error on failure                                                                                                                                                                                                                                                                                          |
+| `execute_prefix_wine`         | `<name> <program> [<argument>...]`: run a program once; `.bat`/`.cmd` are stripped of their bare `pause` lines (`@pause` and `pause >nul` stay) into `/tmp/<name>.bat` on every call, never removed, and run via `cmd /c`; status 1, silent, without a program; a missing `.bat` or `.cmd` aborts the launch on every call, after the once-flag exists too, since the strip runs before the gate |
+| `execute_prefix_winetricks`   | `<name> <verb>...`: run winetricks verbs once                                                                                                                                                                                                                                                                                                                                                    |
+| `set_prefix_dpi_value`        | Write `LogPixels` (DPI, 96 without an argument) to the registry, on every call                                                                                                                                                                                                                                                                                                                   |
+| `set_prefix_dpi_scale`        | Convert a percentage as a bare number (150; 100 without an argument) or a factor with a dot (1.5, 2.0; a bare 2 reads as 2%) to DPI, then `set_prefix_dpi_value`; `150%` prints an arithmetic-syntax error and writes no DPI while the launch goes on, and a comma (`1,5`) is read as the shell's comma operator and writes DPI 4                                                                |
+| `set_prefix_registry_value`   | `<key> <name> <type> <data>`: write one registry value, set-once (see Caveats)                                                                                                                                                                                                                                                                                                                   |
+| `set_prefix_registry_values`  | Write several `name\|type\|data` entries under one key                                                                                                                                                                                                                                                                                                                                           |
+
+Every helper here runs through `execute_prefix_command`; a failed wine command
+returns non-zero (1 from the run-once helpers), which at a config's top level
+aborts the launch.
+
+### `helpers/game.sh`: game executable and assets
 
 | Function                  | Purpose                                                                                                                                                                                                                                       |
 | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `resolve_game_executable` | Parse `${command}` for the first absolute `/…/*.exe` path (any case); set `GAME_FILENAME`, `GAME_DIRECTORY`, `GAME_EXECUTABLE`                                                                                                                |
 | `replace_game_executable` | Swap `GAME_EXECUTABLE` for a new path inside `${command}`; without an argument it leaves an empty `""` word in `${command}` where the executable was, and `restore_game_executable` then returns 0 but leaves that word, so pass the new path |
 | `restore_game_executable` | Revert to the executable captured on the first swap; status 1, silent, when no swap came first                                                                                                                                                |
+
+| Function                       | Purpose                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `install_physx_legacy`         | Install the NVIDIA PhysX legacy runtime into the prefix, once (flag files `.physx` and `.physx_legacy`); a failure aborts the launch                                                                                                                                                                                                                                    |
 
 ### `main.sh`: launch phases
 
@@ -245,6 +269,10 @@ directories ship.
 
 ## Caveats
 
+- **`set_prefix_registry_value` is set-once**: it queries the value first and
+  skips the write if the value exists. Editing a value in a `.conf` after the
+  first launch will not update the prefix until you delete the registry value or
+  recreate the prefix. `set_prefix_registry_values` inherits this per entry.
 - **MangoHud merge tmpfiles accumulate**: each launch with a
   `mangohud/MangoHud.local.conf` or `presets.local.conf` creates a `mktemp` file
   in `$TMPDIR` (else `/tmp`) that is never removed; `/tmp` is tmpfs, emptied at
@@ -261,6 +289,14 @@ directories ship.
   up as a black CEF window. A Vulkan game behind such a launcher (the Minecraft
   instance renders through Vulkan) gets the HUD from the profile's plain
   `MANGOHUD=1` alone, wrapper-free.
+- **`SCB_PRE_COMMAND` reaches the gamescope path only**: the launcher evaluates
+  it immediately before it runs gamescope, so a config running with
+  `SCB_NOSCOPE=1`, the state the `scb` and `noscope` defaults apply (`gamemode`
+  in Game Mode), never sees it. A command that must run before the game starts
+  belongs in the game config body, which both paths source (see the registry
+  writes in `games/lutris/warcraft-iii.conf`). `SCB_POST_COMMAND` sits on an
+  `EXIT` trap the launcher sets after the configs ran: it runs on both paths,
+  but not when a config aborts the launch.
 
 ## Variables without a helper
 
@@ -269,6 +305,8 @@ plain `export`, and appends to `command` with `command+=`.
 
 | Variable                               | Read by                                             | Effect                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | -------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SCB_PRE_COMMAND`                      | launcher                                            | Shell snippet evaluated before gamescope starts (see Caveats)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `SCB_POST_COMMAND`                     | launcher                                            | Shell snippet evaluated when the launcher exits (see Caveats)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `SCB_NESTEDFIX`                        | launcher                                            | Steam overlay and input fix for nested gamescope; on by default                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `PROTON_FSR4_UPGRADE`                  | both builds                                         | FSR4 upgrade for titles shipping an older FSR (GE's `PROTON_FSR3_UPGRADE` reaches no reader); a value other than `0` / `1` picks that FSR4 version; on by default on CachyOS, so there `1` changes nothing                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `PROTON_FSR4_INDICATOR`                | both builds                                         | FSR4 debug indicator                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |

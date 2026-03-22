@@ -43,4 +43,15 @@ test_executable_swap_and_restore() {
   done
 }
 
+test_physx_order() {
+  install_physx_legacy >/dev/null
+  check_equals "winetricks, then msiexec" "winetricks [-q] [--force] [physx]|wine [msiexec] [/i] \
+[$PHYSX_LEGACY_BINARY] [/qn]" "$(paste -sd '|' "$STUB_LOG")"
+
+  rm -f "$WINEPREFIX"/.physx*
+  fake_command "$SANDBOX/failing" 1
+  COMPAT_WINETRICKS_BINARY=$SANDBOX/failing check_status "a failing winetricks" 1 \
+    install_physx_legacy
+}
+
 run_tests

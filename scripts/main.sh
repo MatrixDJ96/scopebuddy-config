@@ -8,6 +8,7 @@ source "${SCB_CONFIGDIR}/scripts/helpers/launcher.sh"
 source "${SCB_CONFIGDIR}/scripts/helpers/gamescope.sh"
 
 source "${SCB_CONFIGDIR}/scripts/helpers/proton.sh"
+source "${SCB_CONFIGDIR}/scripts/helpers/wine.sh"
 
 source "${SCB_CONFIGDIR}/scripts/helpers/game.sh"
 

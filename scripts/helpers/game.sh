@@ -1,4 +1,4 @@
-# The game: its executable and its config paths.
+# The game: its executable, its config paths and the bundled assets.
 
 resolve_game_executable() {
   local arg
@@ -70,4 +70,11 @@ restore_game_executable() {
   fi
 
   replace_game_executable "${__original_game_executable}"
+}
+
+# winetricks first: msiexec installs the legacy runtime on top.
+install_physx_legacy() {
+  execute_prefix_winetricks physx physx
+  execute_prefix_wine physx_legacy \
+    msiexec /i "${PHYSX_LEGACY_BINARY}" /qn
 }

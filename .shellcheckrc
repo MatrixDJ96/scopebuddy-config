@@ -1,0 +1,11 @@
+shell=bash
+external-sources=true
+
+# A source= path resolves against the file that names it.
+source-path=SCRIPTDIR
+
+# SC2034: constants.sh and globals.sh values are read by modules and game configs; tests set inputs.
+disable=SC2034
+
+# SC2119: resolve_game_executable reads ${command}, so the entry points call it without arguments.
+disable=SC2119

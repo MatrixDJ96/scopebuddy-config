@@ -37,6 +37,9 @@ All five run before every commit; after editing `tools/check-form.sh`, `tools/ch
 - `scripts/` follows the launcher's sections: fixed values in `constants.sh`, values from the
   launch environment and the launch state in `globals.sh`, helpers by topic in `helpers/`, the
   launch phases in `main.sh`.
+- A module opens with one sentence saying what it provides; a helper or state variable no game
+  config, `.local` layer or entry point is meant to call or touch starts with `__` (`_` is kept
+  by three `proton.sh` helpers; do not add more).
 - Every step of a game config or a `.local` layer opens with a one-line label saying what it
   does for that game, a helper call included; a commented-out code line under its label is a
   switch kept off, not dead code.

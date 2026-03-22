@@ -1,4 +1,7 @@
-# The launch state the helpers fill.
+# Values from the launch environment and the launch state the helpers fill.
+
+COMPAT_TOOL_PATH="${STEAM_COMPAT_TOOL_PATHS%%:*}"
+COMPAT_TOOL_PATH="${COMPAT_TOOL_PATH:-${PROTONPATH}}"
 
 GAME_FILENAME=""
 GAME_DIRECTORY=""

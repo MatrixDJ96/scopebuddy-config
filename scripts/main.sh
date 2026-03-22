@@ -6,6 +6,8 @@ source "${SCB_CONFIGDIR}/scripts/helpers/log.sh"
 
 source "${SCB_CONFIGDIR}/scripts/helpers/launcher.sh"
 
+source "${SCB_CONFIGDIR}/scripts/helpers/proton.sh"
+
 source "${SCB_CONFIGDIR}/scripts/helpers/game.sh"
 
 apply_profile_defaults() {
@@ -14,6 +16,9 @@ apply_profile_defaults() {
   enable_auto_res
   enable_auto_vrr
   disable_auto_hdr
+
+  enable_proton_wow64
+  enable_proton_ntsync
 
   case "${profile_name}" in
     scb)

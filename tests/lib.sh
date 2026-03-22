@@ -15,6 +15,7 @@ load_framework() {
     "$SANDBOX/wine prefix"
   write_stub "$STUB_TOOL/files/bin/wine"
   write_stub "$STUB_TOOL/protonfixes/winetricks"
+  write_stub "$SANDBOX/gamescope"
 
   export STUB_LOG=$SANDBOX/calls.log
   export HOME=$SANDBOX/home
@@ -22,6 +23,9 @@ load_framework() {
   export WINEPREFIX="$SANDBOX/wine prefix"
   export STEAM_COMPAT_TOOL_PATHS=$STUB_TOOL:$SANDBOX/steam-linux-runtime
   export SCB_CONFIGDIR=$REPO_ROOT
+  GAMESCOPE_BIN=$SANDBOX/gamescope
+  KSCREEN_COMMAND=$SANDBOX/kscreen-doctor
+  SCB_GAMEMODE=0
 
   set -eo pipefail
   # shellcheck source=../scripts/main.sh

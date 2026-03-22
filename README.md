@@ -21,6 +21,11 @@ when gamescope is unavailable or `SCB_NOSCOPE=1`. Each entry point loads the
 framework, the profile defaults and the game's config files in the order
 [`docs/reference.md`](docs/reference.md) § Loading order gives.
 
+The framework exports environment variables: the launcher reads `SCB_*`, and
+Proton and the game process read `PROTON_*`, `DXVK_*`, `MANGOHUD_*`, … to
+control rendering, compatibility and the overlay. See
+[`docs/reference.md`](docs/reference.md) for every helper.
+
 ## Layout
 
 ```text
@@ -30,6 +35,7 @@ scopebuddy/
 ├── games/
 │   ├── steam/      # per-AppID configs (numeric filename)
 │   └── lutris/     # per-game configs (slug filename)
+├── mangohud/       # MangoHud config and presets
 ├── docs/           # reference documentation
 ├── tests/          # launch behaviour tests, run by tests/run.sh
 └── tools/          # lint / format / form / doc checks
@@ -48,6 +54,14 @@ scopebuddy/
    the game's environment variables) and save as `games/<provider>/<id>.conf`.
 3. Add helper calls. The existing files in `games/` are the working examples:
    copy the closest one and adjust.
+
+   ```bash
+   # <Game Title>
+
+   # Enable Gamescope
+   enable_gamescope
+   ```
+
 4. Launch the game once and read the `[SCB]` lines the framework prints on the
    launcher's stdout (Steam started from a terminal shows them):
    `__game_config` names the file that was resolved. Check it is the file you
@@ -59,11 +73,13 @@ scopebuddy/
 ## Local overrides
 
 Any `*.local.conf` or `*.local.env` is gitignored; the ones below are layered on
-their tracked file (the shell layers sourced). Use them for machine-specific or
-experimental settings:
+their tracked file (the shell layers sourced, the MangoHud ones appended). Use
+them for machine-specific or experimental settings:
 
 - `scb.local.conf`, `noscope.local.conf`, `gamemode.local.conf`: overrides for
   each profile
+- `mangohud/MangoHud.local.conf`, `mangohud/presets.local.conf`:
+  machine-specific overlay and presets
 - `games/<provider>/<id>.local.env`: per-game local values
   (resolution, refresh rate)
 - `games/<provider>/<id>.local.conf`: per-game local tweak

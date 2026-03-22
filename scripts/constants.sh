@@ -1,6 +1,7 @@
 # Fixed values: the repository's paths and the log colors.
 
 SCOPEBUDDY_PATH="${SCB_CONFIGDIR}"
+MANGOHUD_PATH="${SCOPEBUDDY_PATH}/mangohud"
 GAMES_PATH="${SCOPEBUDDY_PATH}/games"
 
 SCB_PREFIX_COLOR="\033[35m"

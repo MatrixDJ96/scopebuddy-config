@@ -5,6 +5,7 @@ source "${SCB_CONFIGDIR}/scripts/globals.sh"
 source "${SCB_CONFIGDIR}/scripts/helpers/log.sh"
 
 source "${SCB_CONFIGDIR}/scripts/helpers/launcher.sh"
+source "${SCB_CONFIGDIR}/scripts/helpers/gamescope.sh"
 
 source "${SCB_CONFIGDIR}/scripts/helpers/proton.sh"
 
@@ -20,12 +21,17 @@ apply_profile_defaults() {
   enable_proton_wow64
   enable_proton_ntsync
 
+  set_mangohud_config
+
   case "${profile_name}" in
     scb)
+      disable_gamescope
       ;;
     noscope)
+      disable_gamescope
       ;;
     gamemode)
+      enable_gamescope
       ;;
     *)
       scb_log "Unknown profile: ${profile_name}"

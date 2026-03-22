@@ -14,3 +14,6 @@ __game_config=""
 __game_local_config=""
 
 __original_game_executable=""
+
+__gamescope_args=()
+__framerate_limit=""

@@ -19,6 +19,9 @@ All five run before every commit; after editing `tools/check-form.sh`, `tools/ch
 
 ## Conventions
 
+- A public function or exported variable name (`PROTON_*`, `DXVK_*`, `SCB_*`, `MANGOHUD_*`) is
+  read by a game config, the launcher, Proton or a Vulkan layer (MangoHud): add a helper, never
+  rename one.
 - A machine-specific value goes in a gitignored `*.local.env` or `*.local.conf`, never in a
   tracked file; a value a game `.conf` acts on goes in the `.env` pair (`docs/reference.md` §
   Loading order).
@@ -51,6 +54,11 @@ All five run before every commit; after editing `tools/check-form.sh`, `tools/ch
 - A guard (`tools/check-form.sh`, `tools/check-docs.sh`, `tests/run.sh`) ships a `--self-test`
   that feeds it known-bad input and requires the failure.
 - Every file is in English.
+
+## Gotchas
+
+- A test that reads MangoHud sets `MANGOHUD_PATH` to a fixture: the host's gitignored
+  `mangohud/MangoHud.local.conf` would otherwise change the expected value.
 
 ## Docs
 

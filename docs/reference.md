@@ -7,7 +7,7 @@ See [`../README.md`](../README.md) for the overall layout and for how to add a
 game config.
 
 Contents: Loading order · Constants (`constants.sh`) · Globals (`globals.sh`) ·
-Functions · Proton variant support · Variables without a helper.
+Functions · Proton variant support · Caveats · Variables without a helper.
 
 ## Loading order
 
@@ -27,12 +27,16 @@ three steps:
 Effective override order, last wins:
 `<profile>.conf → <profile>.local.conf → game.env → game.local.env → game.conf → game.local.conf`.
 
+The `.env` pair sets the values a game config reads
+(`games/lutris/warcraft-iii.env` is the example), so every value is in place
+before the `.conf` writes it into the prefix or a gamescope flag.
+
 ## Constants (`constants.sh`)
 
 | Constant                                                                                                             | Value                                           |
 | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | `SCOPEBUDDY_PATH`                                                                                                    | `${SCB_CONFIGDIR}`                              |
-| `GAMES_PATH`                                                                                                         | subdirs of `SCOPEBUDDY_PATH`                    |
+| `MANGOHUD_PATH`, `GAMES_PATH`                                                                                        | subdirs of `SCOPEBUDDY_PATH`                    |
 | `SCB_PREFIX_COLOR`, `SCB_SUCCESS_COLOR`, `SCB_WARNING_COLOR`, `SCB_ERROR_COLOR`, `SCB_INFO_COLOR`, `SCB_RESET_COLOR` | ANSI colors of the `[SCB]` log lines            |
 
 ## Globals (`globals.sh`)
@@ -59,6 +63,16 @@ Effective override order, last wins:
 | `set_auto_frame_limit`   | `SCB_AUTO_FRAME_LIMIT=$1` (as above)                          |
 | `unset_auto_frame_limit` | unset `SCB_AUTO_FRAME_LIMIT`                                  |
 
+Both variables are booleans the launcher reads. On `1` the launcher detects the
+display and injects gamescope `-r <detected refresh>` or `--framerate-limit
+<detected refresh>`; it tests each value with `-eq 1`, so any other value leaves
+the feature off; an empty, unset or non-integer value also makes it print a `[:
+…: integer expected` line (bash 5.3; translated under a non-English locale).
+Both act on gamescope's arguments, so on the gamescope path alone, and
+`SCB_AUTO_REFRESH=1` replaces the `-r` that `set_framerate_limit` set, as
+`SCB_AUTO_RES=1` (a profile default) replaces any `-W` / `-H` a config adds. Use
+`set_framerate_limit` to cap fps at a chosen number.
+
 The launcher picks the display backend for every `SCB_AUTO_*` feature: KDE, then
 GNOME, then wlroots when `jq` and `wlr-randr` are installed. On wlroots without
 a gamescope `-O` output it exits with status 1, which aborts the launch, and the
@@ -70,7 +84,40 @@ launcher exit 1 with an error dialog.
 | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `enable_auto_res` / `disable_auto_res` | `SCB_AUTO_RES` 1 / 0                                                                                                                                                              |
 | `enable_auto_vrr` / `disable_auto_vrr` | `SCB_AUTO_VRR` 1 / 0                                                                                                                                                              |
-| `enable_auto_hdr` / `disable_auto_hdr` | `SCB_AUTO_HDR` 1 / 0 (launcher: `--hdr-enabled` on the gamescope path when a KDE or GNOME display is in HDR, the Wayland and HDR exports on the no-gamescope path)                |
+| `enable_auto_hdr` / `disable_auto_hdr` | `SCB_AUTO_HDR` 1 / 0 (launcher: `--hdr-enabled` on the gamescope path when a KDE or GNOME display is in HDR, the Wayland and HDR exports on the no-gamescope path; see HDR below) |
+
+### `helpers/gamescope.sh`: gamescope flags, framerate and MangoHud
+
+| Function                | Purpose                                                                                                                                                                                                                                                                                                                                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `add_gamescope_flag`    | Append flags to `SCB_GAMESCOPE_ARGS`, skipping duplicates; a flag and its value go in one argument (`"-w 1920"`)                                                                                                                                                                                                                                                                         |
+| `remove_gamescope_flag` | Remove the given flags from `SCB_GAMESCOPE_ARGS`, each matched whole (`"-w 1920"`, not `-w`)                                                                                                                                                                                                                                                                                             |
+| `enable_gamescope`      | Gamescope mode: `MANGOHUD=0`, `SCB_NOSCOPE=0`, add `--mangoapp -f`, and `--hdr-enabled` when `kscreen-doctor` reports the primary output in HDR (needs `jq`; without it the flag is never added); in Game Mode or without the gamescope binary, a warning and `disable_gamescope` instead (see `main.sh`)                                                                                |
+| `disable_gamescope`     | Standalone MangoHud: `MANGOHUD=1`, `SCB_NOSCOPE=1`; remove `--mangoapp -f --hdr-enabled`                                                                                                                                                                                                                                                                                                 |
+| `set_framerate_limit`   | Cap fps (60 without an argument); routes to gamescope `-r` or `PROTON_FRAME_RATE` per mode                                                                                                                                                                                                                                                                                               |
+
+`set_framerate_limit` reads `SCB_NOSCOPE` to choose the path, so it is safe to
+call before `enable_gamescope` / `disable_gamescope`: the limit is re-applied on
+every mode change, and each change first unsets `PROTON_FRAME_RATE` and strips
+any gamescope `-r`, so only a limit set through `set_framerate_limit` survives
+it. Without gamescope, Proton turns `PROTON_FRAME_RATE` into DXVK's
+`dxgi.maxFrameRate` and `d3d9.maxFrameRate`, so the cap reaches the D3D9–D3D12
+games DXVK and vkd3d-proton render (D3D8 too, under `enable_proton_dxvk_d3d8`),
+not OpenGL, native Vulkan or wined3d ones, and a set
+`DXVK_FRAME_RATE` or `VKD3D_FRAME_RATE` wins over it. The launcher uses
+`SCB_GAMESCOPE_ARGS` only when the launch options pass no gamescope arguments
+before `--` (unless `SCB_APPENDMODE=1`); otherwise every flag these helpers set
+is dropped. Every flag helper above rebuilds `SCB_GAMESCOPE_ARGS` from its own
+list: a value from the launch environment is gone once the profile defaults run,
+and one a config assigns directly lasts only until the next helper call, so a
+flag goes through `add_gamescope_flag`.
+
+| Function              | Exports                                          |
+| --------------------- | ------------------------------------------------ |
+| `set_mangohud_config` | `MANGOHUD_CONFIGFILE` and `MANGOHUD_PRESETSFILE` |
+
+Each file is the base, or the base with its `.local` layer merged; the base,
+with an error, when the merge fails.
 
 ### `helpers/proton.sh`: Proton, DXVK, vkd3d and GPU variables
 
@@ -134,8 +181,21 @@ letter when one is given, and `render_preset_latest` otherwise.
 
 | Function                 | Purpose                                                                                                                                                                                                                                            |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apply_profile_defaults` | Accept `scb`, `noscope` or `gamemode`: the `SCB_AUTO_*` toggles, WOW64 and NTSYNC; log and return 1 on any other name                                                                                                                              |
+| `apply_profile_defaults` | Accept `scb`, `noscope` or `gamemode`: the `SCB_AUTO_*` toggles, WOW64, NTSYNC and the MangoHud files, then `disable_gamescope` (`scb`, `noscope`) or `enable_gamescope` (`gamemode`); log and return 1 on any other name                          |
 | `load_game_configs`      | Source the game `.env` and `.local.env`, then the game config and its `.local.conf`; then unset `SCB_APPID`                                                                                                                                        |
+
+On the desktop the `scb` and `noscope` profiles start in standalone-MangoHud
+mode and a game config opts into gamescope with `enable_gamescope`. The defaults
+overwrite the same variables set in the launch options: set those in a
+`.local.conf` instead.
+
+In Game Mode the launcher forces `SCB_NOSCOPE=1` before the configs and
+`MANGOHUD=0` after them, but branches on `SCB_NOSCOPE` only after the configs
+ran, so a config that set it to 0 would start a nested gamescope, which fails;
+without the gamescope binary (`GAMESCOPE_BIN`, default `gamescope`) the launcher
+also forces `SCB_NOSCOPE=1`. Anywhere else, with the gamescope binary installed,
+a config calling `enable_gamescope` wins over an `SCB_NOSCOPE=1` set at launch:
+the launcher still sourced `noscope.conf`, but runs gamescope.
 
 ## Proton variant support
 
@@ -158,6 +218,49 @@ directories ship.
   behind the `descriptor_heap` token while NVIDIA driver bugs remain open
   upstream. Confirm which path a game took by launching with `VKD3D_DEBUG=info`
   and looking for the `VK_EXT_descriptor_heap enabled` line.
+- **HDR**: both variants' `dxgi.dll` and `winewayland.so` read `DXVK_HDR` and
+  `DXVK_NO_HDR`, and their `winex11.so` reads `DXVK_HDR` (GE's `DXVK_NO_HDR`
+  too). GE also accepts the `PROTON_ENABLE_HDR` and `PROTON_USE_HDR` aliases,
+  and its `proton` script writes over what `enable_proton_hdr` /
+  `disable_proton_hdr` set: a non-zero alias (`PROTON_USE_HDR` when both are
+  set) gives `DXVK_HDR=1` and leaves `DXVK_NO_HDR` as it was, an alias at zero
+  gives `DXVK_HDR=0` and `DXVK_NO_HDR=1`. A non-zero `PROTON_FORCE_HDR` wins
+  over both aliases: it gives `DXVK_HDR=1`, with `WAYLANDDRV_FORCE_HDR=1`.
+  CachyOS reads none of them. On CachyOS the DXGI readers are the stock and
+  low-latency DXVKs: the Sarek DXVK (1.14.1), which that build turns on for a
+  GPU without Vulkan 1.3 `descriptorIndexing` or under `PROTON_DXVK_SAREK=1`,
+  reads neither variable. On the no-gamescope path outside Game Mode, when the
+  launcher detects a KDE, GNOME or (with a gamescope `-O`) wlroots desktop,
+  `enable_auto_hdr` makes it export `PROTON_ENABLE_WAYLAND=1` and
+  `PROTON_ENABLE_HDR=1` after the configs on every launch, whatever the
+  display's HDR state, so GE forces `DXVK_HDR=1`; the profile defaults leave it
+  off. With no HDR variable set, GE's DXGI detects HDR from the Wine Wayland
+  output or gamescope (its `proton` script says so), and CachyOS's Wayland
+  driver tags the game surface `windows_bt2100`, so the in-game HDR switch
+  works (2531310). The output surface must be HDR-capable: gamescope
+  `--hdr-enabled` (see `enable_gamescope`), or the Wayland driver for the
+  desktop path. On NVIDIA drivers older than `595.x.x`, also install the
+  vk-hdr-layer (neither build ships it) and set its `ENABLE_HDR_WSI=1`; driver
+  595 carries native Vulkan HDR and needs neither.
+
+## Caveats
+
+- **MangoHud merge tmpfiles accumulate**: each launch with a
+  `mangohud/MangoHud.local.conf` or `presets.local.conf` creates a `mktemp` file
+  in `$TMPDIR` (else `/tmp`) that is never removed; `/tmp` is tmpfs, emptied at
+  reboot, and `systemd-tmpfiles-clean.timer` deletes its files older than ten
+  days (`q /tmp … 10d` in `/usr/lib/tmpfiles.d/tmp.conf`).
+- **Gamescope and standalone MangoHud are mutually exclusive**: do not `export
+  MANGOHUD=1` in a config that calls `enable_gamescope`. For an OpenGL game
+  without gamescope, prepend the `mangohud` wrapper to `command`: it preloads
+  MangoHud's OpenGL shim (not for `cs2.sh` or `RiseOfTheTombRaider.sh`) and
+  runs the command with `MANGOHUD=1` whatever the config exported (the
+  installed 0.8.4 wrapper takes `--dlsym` as a no-op).
+- **The MangoHud wrapper on a launcher command blacks out its window**: the
+  Minecraft launcher started as `mangohud <launcher>` from a game config comes
+  up as a black CEF window. A Vulkan game behind such a launcher (the Minecraft
+  instance renders through Vulkan) gets the HUD from the profile's plain
+  `MANGOHUD=1` alone, wrapper-free.
 
 ## Variables without a helper
 

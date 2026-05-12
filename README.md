@@ -7,7 +7,7 @@ gamescope or without it. This repo holds the bash framework and the per-game
 configs that ScopeBuddy sources at launch.
 
 Contents: How it works · Layout · Add a game config · Local overrides ·
-Requirements.
+Tooling · Requirements.
 
 ## How it works
 
@@ -31,7 +31,8 @@ scopebuddy/
 │   ├── steam/      # per-AppID configs (numeric filename)
 │   └── lutris/     # per-game configs (slug filename)
 ├── docs/           # reference documentation
-└── tests/          # launch behaviour tests, run by tests/run.sh
+├── tests/          # launch behaviour tests, run by tests/run.sh
+└── tools/          # lint / format / form / doc checks
 ```
 
 ## Add a game config
@@ -69,6 +70,10 @@ experimental settings:
 
 Which layer a value belongs in: [`docs/reference.md`](docs/reference.md)
 § Loading order.
+
+## Tooling
+
+Run the gates in [`AGENTS.md`](AGENTS.md) § Build & run before committing.
 
 ## Requirements
 

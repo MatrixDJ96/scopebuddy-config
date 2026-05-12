@@ -7,8 +7,15 @@ there is no build, and an edit is live at the next launch on every host that pul
 ## Build & run
 
 ```bash
+tools/lint.sh            # shellcheck over the shell sources, the *.local.* layers excluded
+tools/format.sh --check  # shfmt diff; bare, it rewrites the files in place
+tools/check-form.sh      # line width and the banned shell shapes
+tools/check-docs.sh      # docs/reference.md helper tables against scripts/, both ways
 tests/run.sh             # every test; no real prefix, no network where `unshare -rn` works
 ```
+
+All five run before every commit; after editing `tools/check-form.sh`, `tools/check-docs.sh` or
+`tests/run.sh`, its `--self-test` runs too.
 
 ## Conventions
 
@@ -19,10 +26,14 @@ tests/run.sh             # every test; no real prefix, no network where `unshare
   launcher's shell: they set no shell option, and a public helper returns non-zero only where
   the launch must stop, since at a config's top level that status aborts it (a `__` predicate
   read in a condition may return 1).
+- `tools/*.sh` and `tests/run.sh` open with `#!/usr/bin/env bash`, `set -euo pipefail` and a
+  header (what it does, `Usage:`, output, exit status).
 - Control flow is `if … then … fi`, one action per line, blank lines between steps, 100
   columns. Output is captured before `grep -q`, an assigned pipeline carries `|| true` or opens
   an `if !`, a fallback is `${var:-…}`, and command output enters `$(( ))` through a variable:
   under `pipefail` and `set -e` the other forms fail, print twice or escape errexit.
+  `tools/check-form.sh` reads the rules its header lists, review reads the rest; a line holding
+  a banned shape as data ends in `# form: literal`.
 - `scripts/` follows the launcher's sections: fixed values in `constants.sh`, values from the
   launch environment and the launch state in `globals.sh`, helpers by topic in `helpers/`, the
   launch phases in `main.sh`.
@@ -34,6 +45,8 @@ tests/run.sh             # every test; no real prefix, no network where `unshare
   setter gets none. Each scenario is a `test_*` function that `run_tests` runs in its own
   `load_framework` sandbox, its fixtures are named functions, and the file ends with
   `run_tests`.
+- A guard (`tools/check-form.sh`, `tools/check-docs.sh`, `tests/run.sh`) ships a `--self-test`
+  that feeds it known-bad input and requires the failure.
 - Every file is in English.
 
 ## Docs

@@ -1,0 +1,11 @@
+# Local profile overrides
+scb.local.conf
+noscope.local.conf
+gamemode.local.conf
+
+# Local per-game overrides
+games/**/*.local.conf
+
+# Local MangoHud overrides
+mangohud/MangoHud.local.conf
+mangohud/presets.local.conf

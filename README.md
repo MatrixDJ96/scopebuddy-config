@@ -34,8 +34,10 @@ scopebuddy/
 ├── scripts/        # bash framework: main, constants, globals, helpers/
 ├── games/
 │   ├── steam/      # per-AppID configs (numeric filename)
-│   └── lutris/     # per-game configs (slug filename)
+│   ├── lutris/     # per-game configs (slug filename)
+│   └── rpcs3/      # per-title configs (disc serial filename)
 ├── mangohud/       # MangoHud config and presets
+├── vkbasalt/       # vkBasalt effect presets
 ├── assets/         # bundled DLLs / installers
 ├── docs/           # reference documentation
 ├── tests/          # launch behaviour tests, run by tests/run.sh
@@ -74,8 +76,9 @@ scopebuddy/
 ## Local overrides
 
 Any `*.local.conf` or `*.local.env` is gitignored; the ones below are layered on
-their tracked file (the shell layers sourced, the MangoHud ones appended). Use
-them for machine-specific or experimental settings:
+their tracked file (the shell layers sourced, the MangoHud ones appended), and a
+vkBasalt preset has no `.local` layer. Use them for machine-specific or
+experimental settings:
 
 - `scb.local.conf`, `noscope.local.conf`, `gamemode.local.conf`: overrides for
   each profile

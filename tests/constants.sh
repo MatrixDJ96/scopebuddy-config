@@ -14,6 +14,7 @@ test_assets_are_real_files() {
 
 test_shipped_directories() {
   check_status "MangoHud.conf under MANGOHUD_PATH" 0 test -f "$MANGOHUD_PATH/MangoHud.conf"
+  check_status "cas.conf under VKBASALT_PATH" 0 test -f "$VKBASALT_PATH/cas.conf"
 }
 
 run_tests

@@ -1,0 +1,11 @@
+shell=bash
+external-sources=true
+
+# SC1091: source path is dynamic — game configs source helpers via SCB_SOURCE_PATH.
+disable=SC1091
+
+# SC2034: variables assigned but apparently unused — many SCB_*/PROTON_* are read by external launchers/tools.
+disable=SC2034
+
+# SC2119: framework helpers take no arguments — resolve_game_executable reads ${command} instead.
+disable=SC2119

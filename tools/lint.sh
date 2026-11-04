@@ -10,8 +10,8 @@ cd "${REPO_ROOT}"
 
 mapfile -t TARGETS < <(
   find scripts games tools \
-    \( -name '*.sh' -o -name '*.conf' \) \
-    -not -name '*.local.conf' \
+    \( -name '*.sh' -o -name '*.conf' -o -name '*.env' \) \
+    -not -name '*.local.conf' -not -name '*.local.env' \
     -type f
   find . -maxdepth 1 -name '*.conf' -not -name '*.local.conf' -type f
 )

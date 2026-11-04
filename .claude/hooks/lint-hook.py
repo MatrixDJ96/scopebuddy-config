@@ -19,7 +19,7 @@ import sys
 
 # config at the repo root -> (command, file suffixes, shebang interpreters for a suffixless file)
 LINTERS = (
-    ((".shellcheckrc",), ["shellcheck"], (".sh", ".bash", ".conf"),
+    ((".shellcheckrc",), ["shellcheck"], (".sh", ".bash", ".conf", ".env"),
      ("sh", "bash", "dash", "ksh")),  # the shells shellcheck accepts; zsh it refuses
     (("ruff.toml", ".ruff.toml", "pyproject.toml"), ["ruff", "check", "--quiet"], (".py",),
      ("python", "python3")),
@@ -97,7 +97,7 @@ def main():
     target = tool_input.get("file_path") if isinstance(tool_input, dict) else None
     if not isinstance(target, str) or not os.path.isfile(target):
         return 0
-    if target.endswith(".local.conf"):  # machine-specific overrides, excluded like tools/lint.sh
+    if target.endswith((".local.conf", ".local.env")):  # machine-specific overrides, excluded like tools/lint.sh
         return 0
     # git names the root by its real path; the header and the linter take the file's too
     real = os.path.join(os.path.realpath(os.path.dirname(target)), os.path.basename(target))

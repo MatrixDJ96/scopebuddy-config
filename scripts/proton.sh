@@ -1,6 +1,6 @@
 # Proton feature helpers
 
-# Export a CachyOS-only env var; warn and return 1 on other Proton variants
+# Export a CachyOS-only env var; warn and skip it on other Proton variants
 _require_proton_cachyos() {
   local var_name="$1"
   local value="$2"
@@ -11,7 +11,6 @@ _require_proton_cachyos() {
   fi
 
   scb_log_warning "${var_name} requires Proton-CachyOS"
-  return 1
 }
 
 # Add a token to the comma-separated VKD3D_CONFIG list (idempotent)

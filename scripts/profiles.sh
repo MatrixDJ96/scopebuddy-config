@@ -11,7 +11,7 @@ apply_default_config() {
   # Set MangoHud config
   set_mangohud_config
 
-  # Enable auto settings
+  # Auto settings
   enable_auto_res
   enable_auto_vrr
   disable_auto_hdr

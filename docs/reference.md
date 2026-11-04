@@ -17,11 +17,17 @@ The launcher sources one entry point (`scb.conf`, `noscope.conf` or
 2. `load_profile_configs "<profile>"` — applies the baseline defaults
    (`apply_default_config`), then sources the optional `<profile>.local.conf`.
 3. `resolve_game_executable` and `load_game_configs` — resolve the game from the
-   launch command and `SCB_APPID`, then source `games/<provider>/<id>.conf`
-   followed by its optional `.local.conf`.
+   launch command and `SCB_APPID`, then source the game values
+   (`games/<provider>/<id>.env`, then its optional `.local.env`) and the game
+   actions (`games/<provider>/<id>.conf`, then its optional `.local.conf`). All
+   four files are optional.
 
 Effective override order, last wins:
-`<profile>.conf → <profile>.local.conf → game.conf → game.local.conf`.
+`<profile>.conf → <profile>.local.conf → game.env → game.local.env → game.conf → game.local.conf`.
+
+The `.env` pair sets the values a game config reads (`games/lutris/warcraft-iii.env`
+is the example), so every value is in place before the `.conf` writes it into
+the prefix or a gamescope flag.
 
 ## Globals (`paths.sh`)
 
@@ -165,7 +171,7 @@ the three resolved values on every call.
 | Function | Purpose |
 |---|---|
 | `resolve_game_executable` | Parse `${command}` for the first absolute `/…/*.exe` path; set `GAME_FILENAME`, `GAME_DIRECTORY`, `GAME_EXECUTABLE` |
-| `resolve_game_context` | Map `SCB_APPID` to provider and `SCB_GAME_CONFIG` / `SCB_GAME_LOCAL_CONFIG` |
+| `resolve_game_context` | Map `SCB_APPID` to provider and `SCB_GAME_ENV` / `SCB_GAME_LOCAL_ENV` / `SCB_GAME_CONFIG` / `SCB_GAME_LOCAL_CONFIG` |
 | `replace_game_executable` | Swap `GAME_EXECUTABLE` for a new path inside `${command}` |
 | `restore_game_executable` | Revert to the executable captured on the first swap |
 
@@ -205,7 +211,7 @@ standalone-MangoHud mode and a game config opts into gamescope with
 |---|---|
 | `resolve_profile_local_config` | Compute `SCB_PROFILE_LOCAL_CONFIG` for a profile |
 | `load_profile_configs` | Apply profile defaults, then source the profile `.local.conf` |
-| `load_game_configs` | Source the game config and its `.local.conf`, then unset `SCB_APPID` |
+| `load_game_configs` | Source the game `.env` and `.local.env`, then the game config and its `.local.conf`, then unset `SCB_APPID` |
 
 ## Proton variant support
 

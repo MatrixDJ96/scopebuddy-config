@@ -8,8 +8,8 @@ changes in this repository. Read this before implementing or committing.
 ScopeBuddy sources one entry point (`scb.conf`, `noscope.conf`, `gamemode.conf`),
 which loads `scripts/bootstrap.sh`, then the framework modules in dependency
 order, applies the profile defaults, and finally sources the matching game
-config. The three profiles share one default set; the entry point decides which
-`<profile>.local.conf` is sourced.
+values (`.env`) and game config (`.conf`). The three profiles share one default
+set; the entry point decides which `<profile>.local.conf` is sourced.
 See [`docs/reference.md`](docs/reference.md) for the module and helper list, the
 loading order and the effective override chain.
 
@@ -73,4 +73,5 @@ tools/check-docs.sh
 ## Local overrides
 
 Never commit machine-specific values into the tracked configs: they belong in a
-`*.local.conf`, which [`README.md`](README.md) describes in full.
+`*.local.env` or `*.local.conf`, which [`README.md`](README.md) describes in
+full.

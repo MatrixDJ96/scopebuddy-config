@@ -16,8 +16,9 @@ entry point:
 
 1. sources `scripts/bootstrap.sh`, which loads the framework modules;
 2. applies the profile defaults and the optional `<profile>.local.conf`;
-3. resolves the game executable, then sources the matching
-   `games/<provider>/<id>.conf` and its `.local.conf`.
+3. resolves the game executable, then sources the matching game values
+   (`games/<provider>/<id>.env` and its `.local.env`) and after them the game
+   actions (`games/<provider>/<id>.conf` and its `.local.conf`).
 
 The three profiles share one set of defaults, so what separates them is which
 `<profile>.local.conf` gets sourced. Those defaults leave gamescope off and
@@ -73,12 +74,18 @@ See [`docs/reference.md`](docs/reference.md) for the full helper list, and
 
 ## Local overrides
 
-Any `*.local.conf` is gitignored and sourced *after* the tracked file, so it
-wins on conflict. Use it for machine-specific or experimental settings:
+Any `*.local.conf` or `*.local.env` is gitignored and sourced *after* its
+tracked file, so it wins on conflict. Use it for machine-specific or
+experimental settings:
 
 - `scb.local.conf` — overrides for the desktop profile
 - `mangohud/MangoHud.local.conf` — machine-specific overlay
+- `games/<provider>/<id>.local.env` — per-game local values (resolution,
+  refresh rate) that the game's `.conf` reads
 - `games/<provider>/<id>.local.conf` — per-game local tweak
+
+A value a game's `.conf` acts on (a registry write, a gamescope flag) belongs in
+a `.env`: the `.local.conf` runs after the `.conf` has already used it.
 
 ## Tooling
 

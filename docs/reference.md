@@ -220,9 +220,9 @@ is upgraded.
 
 | Component | Version |
 |---|---|
-| ScopeBuddy launcher | `ScopeBuddy-1.4.0-2.fc44.noarch` |
-| Proton-CachyOS | `cachyos-11.0-20260703-slr` (vkd3d-proton 3.1.0, DXVK 3.0.2) |
-| Proton-GE | `GE-Proton11-3` (vkd3d-proton 3.1.0, DXVK 3.0.2) |
+| ScopeBuddy launcher | `ScopeBuddy-1.5.0-3.fc45.noarch` |
+| Proton-CachyOS | `cachyos-11.0-20261015-slr` (vkd3d-proton 3.1.0, DXVK `v3.1.1-97-ga78a4467cadb22be-pcos`) |
+| Proton-GE | `GE-Proton11-11` (vkd3d-proton 3.1.0, DXVK `v3.1.1-134-g2cb40186c43d6170`) |
 
 Read the installed build id from `version` in each compatibility-tool directory,
 and the component versions from the `vkd3d-proton` and `dxvk` DLLs those

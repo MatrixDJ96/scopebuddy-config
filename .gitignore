@@ -5,6 +5,7 @@ gamemode.local.conf
 
 # Local per-game overrides
 games/**/*.local.conf
+games/**/*.local.env
 
 # Local MangoHud overrides
 mangohud/MangoHud.local.conf

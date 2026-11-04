@@ -9,6 +9,8 @@ GAME_EXECUTABLE=""
 
 # Runtime values populated while resolving the current game config
 SCB_GAME_APPID=""
+SCB_GAME_ENV=""
+SCB_GAME_LOCAL_ENV=""
 SCB_GAME_CONFIG=""
 SCB_GAME_LOCAL_CONFIG=""
 
@@ -50,6 +52,8 @@ resolve_game_context() {
   local game_id=""
 
   SCB_GAME_APPID="${appid}"
+  SCB_GAME_ENV=""
+  SCB_GAME_LOCAL_ENV=""
   SCB_GAME_CONFIG=""
   SCB_GAME_LOCAL_CONFIG=""
 
@@ -65,10 +69,14 @@ resolve_game_context() {
     provider="steam"
   fi
 
+  SCB_GAME_ENV="${GAMES_PATH}/${provider}/${game_id}.env"
+  SCB_GAME_LOCAL_ENV="${GAMES_PATH}/${provider}/${game_id}.local.env"
   SCB_GAME_CONFIG="${GAMES_PATH}/${provider}/${game_id}.conf"
   SCB_GAME_LOCAL_CONFIG="${GAMES_PATH}/${provider}/${game_id}.local.conf"
 
   scb_log "SCB_GAME_APPID: '$SCB_GAME_APPID'"
+  scb_log "SCB_GAME_ENV: '$SCB_GAME_ENV'"
+  scb_log "SCB_GAME_LOCAL_ENV: '$SCB_GAME_LOCAL_ENV'"
   scb_log "SCB_GAME_CONFIG: '$SCB_GAME_CONFIG'"
   scb_log "SCB_GAME_LOCAL_CONFIG: '$SCB_GAME_LOCAL_CONFIG'"
 }

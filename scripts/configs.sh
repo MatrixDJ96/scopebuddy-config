@@ -27,7 +27,7 @@ load_profile_configs() {
   source_if_exists "${SCB_PROFILE_LOCAL_CONFIG}"
 }
 
-# Load the shared game config first and the local game config after it
+# Load the game values (.env, .local.env) first and the game actions (.conf, .local.conf) after them
 # Warning: SCB_APPID is unset at the end so the launcher's own loader skips the old AppID path
 load_game_configs() {
   resolve_game_context
@@ -36,6 +36,8 @@ load_game_configs() {
     return 0
   fi
 
+  source_if_exists "${SCB_GAME_ENV}"
+  source_if_exists "${SCB_GAME_LOCAL_ENV}"
   source_if_exists "${SCB_GAME_CONFIG}"
   source_if_exists "${SCB_GAME_LOCAL_CONFIG}"
 

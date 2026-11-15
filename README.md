@@ -98,3 +98,6 @@ Run the gates in [`AGENTS.md`](AGENTS.md) § Build & run before committing.
   tested builds are in [`docs/reference.md`](docs/reference.md) § Proton variant
   support.
 - Git LFS for `assets/`.
+- *Optional:* a dual-boot Windows partition mounted at
+  `/run/media/$USER/Windows` for configs that symlink save data
+  ([`docs/reference.md`](docs/reference.md) § Caveats).

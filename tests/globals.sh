@@ -22,4 +22,13 @@ test_proton_paths() {
     "$(globals_in_new_shell '$COMPAT_WINE_BINARY' PROTONPATH=/proton/GE)"
 }
 
+test_windows_user() {
+  check_equals "default Windows user" "/run/media/me/Windows/Users/MatrixDJ96" \
+    "$(globals_in_new_shell '$WINDOWS_USER_PATH' USER=me)"
+  check_equals "roaming folder" "/run/media/me/Windows/Users/MatrixDJ96/AppData/Roaming" \
+    "$(globals_in_new_shell '$WINDOWS_ROAMING_PATH' USER=me)"
+  check_equals "WINDOWS_USER set" "/run/media/me/Windows/Users/Other" \
+    "$(globals_in_new_shell '$WINDOWS_USER_PATH' USER=me WINDOWS_USER=Other)"
+}
+
 run_tests

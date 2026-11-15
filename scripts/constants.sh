@@ -1,11 +1,14 @@
-# Fixed values: the repository's paths and the log colors.
+# Fixed values: the repository's paths, the d3d8to9 release, the log colors.
 
 SCOPEBUDDY_PATH="${SCB_CONFIGDIR}"
 MANGOHUD_PATH="${SCOPEBUDDY_PATH}/mangohud"
 ASSETS_PATH="${SCOPEBUDDY_PATH}/assets"
 GAMES_PATH="${SCOPEBUDDY_PATH}/games"
 
+PSPCSDK_EMULATOR_PATH="${ASSETS_PATH}/pspcsdk-emulator-v1.1"
 PHYSX_LEGACY_BINARY="${ASSETS_PATH}/PhysX-9.13.0604-SystemSoftware-Legacy.msi"
+
+D3D8TO9_VERSION="1.15.1"
 
 SCB_PREFIX_COLOR="\033[35m"
 SCB_SUCCESS_COLOR="\033[32m"

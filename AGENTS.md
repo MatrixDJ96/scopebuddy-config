@@ -14,6 +14,9 @@ tools/check-docs.sh      # docs/reference.md helper tables against scripts/, bot
 tests/run.sh             # every test; no real prefix, no network where `unshare -rn` works
 ```
 
+The gates need `shellcheck`, `shfmt`, `python3`, `jq` and `/usr/bin/curl`; without `jq` the
+Warcraft III check in `tests/main.sh` and the HDR check in `tests/helpers/gamescope.sh` fail.
+
 All five run before every commit; after editing `tools/check-form.sh`, `tools/check-docs.sh` or
 `tests/run.sh`, its `--self-test` runs too.
 

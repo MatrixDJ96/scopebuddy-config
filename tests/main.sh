@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# Test of scripts/main.sh: profiles and layers.
+# Test of scripts/main.sh: profiles, layers and every tracked game config.
+# shellcheck disable=SC2016  # fixture layers are shell code written to files
 
 # shellcheck source=lib.sh
 source "$(dirname "$(realpath "$0")")/lib.sh"
 
-# game_install: a repository copy without host .local layers, a game install.
+# game_install: a repository copy without host .local layers, a game install, a Windows drive.
 game_install() {
   CONFIG_DIR=$SANDBOX/config
   GAME_DIR="$SANDBOX/library/common/game dir"
   MODS_DIR="$SANDBOX/library/Content/Paks/~mods"
+  WINDOWS=$SANDBOX/windows
 
   mkdir -p "$CONFIG_DIR" "$GAME_DIR" "$MODS_DIR" "$SANDBOX/bin"
   cp -r "$REPO_ROOT/scripts" "$REPO_ROOT/assets" "$REPO_ROOT/games" \
@@ -16,8 +18,26 @@ game_install() {
   find "$CONFIG_DIR/games" -name '*.local.*' -delete
   touch "$GAME_DIR/Game.exe" "$GAME_DIR/d3d8.dll" "$GAME_DIR/RenderEdge_Widescreen.mix"
 
+  for save in Zomboid "Games/Age of Mythology Retold" AppData/Roaming/Factorio; do
+    mkdir -p "$WINDOWS/$save"
+    echo save >"$WINDOWS/$save/save.dat"
+  done
+
+  # Linux-side folders as a first launch finds them: a swapped link would delete the Windows one.
+  mkdir -p "$HOME/.local/share/Zomboid" "$HOME/.factorio" \
+    "$WINEPREFIX/drive_c/users/steamuser/AppData/Roaming/Factorio" \
+    "$WINEPREFIX/drive_c/users/steamuser/Games/Age of Mythology Retold"
+  windows_drive "$WINDOWS"
   fake_command "$SANDBOX/bin/kscreen-doctor" 1
+  # 7z x <archive> -o<dir> -y
+  printf '#!/bin/sh\ncp "$2" "${3#-o}/DisableEOS.pak"\n' >"$SANDBOX/bin/7z"
+  chmod +x "$SANDBOX/bin/7z"
   PATH=$SANDBOX/bin:$PATH
+}
+
+windows_drive() {
+  printf '%s\n' "WINDOWS_USER_PATH='$1'" "WINDOWS_ROAMING_PATH='$1/AppData/Roaming'" \
+    >"$CONFIG_DIR/scb.local.conf"
 }
 
 # launch <profile> <id> [<command>]
@@ -26,6 +46,37 @@ launch() {
   SCB_APPID=$2
   command=${3:-"\"$GAME_DIR/Game.exe\""}
   source "$CONFIG_DIR/$1.conf"
+}
+
+# launch_game <id> [<command>]: status 1 when the config dropped the command or left a WINE*,
+# PROTON*, DXVK*, VKD3D* or VKBASALT_CONFIG_FILE variable unexported, which the game would not see.
+launch_game() {
+  local launched=${2:-"\"$GAME_DIR/Game.exe\""}
+  local unexported
+
+  launch scb "$1" "$launched"
+
+  if [[ $command != "$launched"* ]]; then
+    return 1
+  fi
+
+  unexported=$(declare -p \
+    | grep -E '^declare -[^x ]+ (WINE|PROTON|DXVK|VKD3D|VKBASALT_CONFIG_FILE)' || true)
+  [[ -z $unexported ]]
+}
+
+tracked_games() {
+  find "$REPO_ROOT/games" -name '*.conf' -not -name '*.local.conf' \
+    | sed -E "s#^$REPO_ROOT/games/(steam/)?##; s#\\.conf\$##" | sort
+}
+
+# launch_tracked_games <label>: every config with a .exe.
+launch_tracked_games() {
+  local game
+
+  for game in $(tracked_games); do
+    check_status "$game $1" 0 launch_game "$game"
+  done
 }
 
 # fake_display: primary output at 2560x1440 60 Hz, whose top rate at that size is 143.9 Hz.
@@ -95,6 +146,29 @@ test_layer_order() {
   check_unset SCB_APPID
 }
 
+test_tracked_games_launch() {
+  local before
+
+  game_install
+  before=$(find "$CONFIG_DIR" "$WINDOWS" -printf '%p %s\n' | sort || true)
+
+  launch_tracked_games launches
+
+  check_equals "repository and Windows files changed" "" \
+    "$(diff <(echo "$before") <(find "$CONFIG_DIR" "$WINDOWS" -printf '%p %s\n' | sort) || true)"
+  check_equals "108600 save link" "$WINDOWS/Zomboid" "$(readlink "$HOME/.local/share/Zomboid")"
+  check_status "PsPcSdk emulator in the game directory" 0 test -f "$GAME_DIR/version.dll"
+}
+
+# A file where the drive should be mounted makes every mkdir under it fail.
+test_tracked_games_launch_without_windows_drive() {
+  game_install
+  : >"$SANDBOX/unmounted"
+  windows_drive "$SANDBOX/unmounted/Windows"
+  cd "$GAME_DIR"
+  launch_tracked_games "launches from its directory without Windows"
+}
+
 test_failing_layer_stops_launch() {
   local layer
   local profile
@@ -120,9 +194,20 @@ test_warcraft_iii_registry() {
     >"$CONFIG_DIR/games/lutris/warcraft-iii.local.env"
 
   launch scb lutris/warcraft-iii >/dev/null
+  check_equals "framerate and DLL override" "90 d3d8.dll=n,b" \
+    "$PROTON_FRAME_RATE $WINEDLLOVERRIDES"
   check_equals "display values" "2560 1440 144 90" "$(registry_value reswidth) \
 $(registry_value resheight) $(registry_value refreshrate) $(registry_value maxfps)"
   check_equals "install path" "Z:${GAME_DIR//\//\\}" "$(registry_value InstallPath)"
+}
+
+test_disable_eos_extracted() {
+  game_install
+  : >"$MODS_DIR/DisableEOS.7z"
+
+  launch scb 1599660 >/dev/null
+  check_status "DisableEOS.pak" 0 test -f "$MODS_DIR/DisableEOS.pak"
+  check_status "its archive removed" 1 test -e "$MODS_DIR/DisableEOS.7z"
 }
 
 run_tests

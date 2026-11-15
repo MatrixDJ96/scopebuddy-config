@@ -37,16 +37,23 @@ before the `.conf` writes it into the prefix or a gamescope flag.
 | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | `SCOPEBUDDY_PATH`                                                                                                    | `${SCB_CONFIGDIR}`                              |
 | `MANGOHUD_PATH`, `ASSETS_PATH`, `GAMES_PATH`                                                                         | subdirs of `SCOPEBUDDY_PATH`                    |
-| `PHYSX_LEGACY_BINARY`                                                                                                | bundled assets under `ASSETS_PATH`              |
+| `PSPCSDK_EMULATOR_PATH`, `PHYSX_LEGACY_BINARY`                                                                       | bundled assets under `ASSETS_PATH`              |
+| `D3D8TO9_VERSION`                                                                                                    | the d3d8to9 release `install_d3d8to9` downloads |
 | `SCB_PREFIX_COLOR`, `SCB_SUCCESS_COLOR`, `SCB_WARNING_COLOR`, `SCB_ERROR_COLOR`, `SCB_INFO_COLOR`, `SCB_RESET_COLOR` | ANSI colors of the `[SCB]` log lines            |
 
 ## Globals (`globals.sh`)
 
 | Global                                           | Value                                                                                                                                                                                                       |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `WINDOWS_USER`                                   | `${WINDOWS_USER:-MatrixDJ96}`                                                                                                                                                                               |
+| `USER_DATA_PATH`                                 | `${HOME}/.local/share`                                                                                                                                                                                      |
+| `WINDOWS_USER_PATH`                              | `/run/media/${USER}/Windows/Users/${WINDOWS_USER}`                                                                                                                                                          |
+| `WINDOWS_ROAMING_PATH`                           | `${WINDOWS_USER_PATH}/AppData/Roaming`                                                                                                                                                                      |
 | `COMPAT_TOOL_PATH`                               | first `STEAM_COMPAT_TOOL_PATHS` entry, else `PROTONPATH`                                                                                                                                                    |
 | `COMPAT_WINE_BINARY`, `COMPAT_WINETRICKS_BINARY` | tools inside `COMPAT_TOOL_PATH`                                                                                                                                                                             |
 | `WINEPREFIX`                                     | `WINEPREFIX` from the launch environment, else `${STEAM_COMPAT_DATA_PATH}/pfx` (not exported when built from `STEAM_COMPAT_DATA_PATH`: only the `helpers/wine.sh` helpers pass it to a command), else empty |
+| `PREFIX_USER_PATH`                               | `${WINEPREFIX}/drive_c/users/steamuser`                                                                                                                                                                     |
+| `PREFIX_ROAMING_PATH`                            | `${PREFIX_USER_PATH}/AppData/Roaming`                                                                                                                                                                       |
 
 ## Functions
 
@@ -105,8 +112,8 @@ every mode change, and each change first unsets `PROTON_FRAME_RATE` and strips
 any gamescope `-r`, so only a limit set through `set_framerate_limit` survives
 it. Without gamescope, Proton turns `PROTON_FRAME_RATE` into DXVK's
 `dxgi.maxFrameRate` and `d3d9.maxFrameRate`, so the cap reaches the D3D9–D3D12
-games DXVK and vkd3d-proton render (D3D8 too, under `enable_proton_dxvk_d3d8`),
-not OpenGL, native Vulkan or wined3d ones, and a set
+games DXVK and vkd3d-proton render (D3D8 too, under `enable_proton_dxvk_d3d8` or
+through `install_d3d8to9`), not OpenGL, native Vulkan or wined3d ones, and a set
 `DXVK_FRAME_RATE` or `VKD3D_FRAME_RATE` wins over it. The launcher uses
 `SCB_GAMESCOPE_ARGS` only when the launch options pass no gamescope arguments
 before `--` (unless `SCB_APPENDMODE=1`); otherwise every flag these helpers set
@@ -189,7 +196,7 @@ Every helper here runs through `execute_prefix_command`; a failed wine command
 returns non-zero (1 from the run-once helpers), which at a config's top level
 aborts the launch.
 
-### `helpers/game.sh`: game executable and assets
+### `helpers/game.sh`: game executable, files and assets
 
 | Function                  | Purpose                                                                                                                                                                                                                                       |
 | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -197,9 +204,18 @@ aborts the launch.
 | `replace_game_executable` | Swap `GAME_EXECUTABLE` for a new path inside `${command}`; without an argument it leaves an empty `""` word in `${command}` where the executable was, and `restore_game_executable` then returns 0 but leaves that word, so pass the new path |
 | `restore_game_executable` | Revert to the executable captured on the first swap; status 1, silent, when no swap came first                                                                                                                                                |
 
+| Function             | Purpose                                                                                                                                                                                                     |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `symlink_directory`  | `<source> <target>`: replace the target dir with a symlink to a source dir (see Caveats)                                                                                                                    |
+| `install_game_files` | `<target> <path>...`: copy files or directory contents into a target dir, skipping a missing path                                                                                                           |
+| `download_game_file` | `<file> <url>...`: download via curl unless the file exists, trying each URL, with `LD_PRELOAD` and `LD_LIBRARY_PATH` removed; when every URL fails it logs an error and returns 0, leaving no partial file |
+
 | Function                       | Purpose                                                                                                                                                                                                                                                                                                                                                                 |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `install_d3d8to9`              | `<directory>`: download the d3d8to9 release `d3d8.dll` (`D3D8TO9_VERSION`) into a target dir (status 0 when the download fails, as `download_game_file`); the game also needs `WINEDLLOVERRIDES="d3d8.dll=n,b"`; an existing `d3d8.dll` is kept                                                                                                                         |
 | `install_physx_legacy`         | Install the NVIDIA PhysX legacy runtime into the prefix, once (flag files `.physx` and `.physx_legacy`); a failure aborts the launch                                                                                                                                                                                                                                    |
+| `install_pspcsdk_emulator_v11` | Copy the PsPcSdkEmulator `v1.1` `version.dll` (PSN login emulator, MPL-2.0, source at <https://github.com/LNDF/PsPcSdkEmulator>) into the game dir on every call, over any file of the same name (Sony PC ports); the game also needs `WINEDLLOVERRIDES="version.dll=n,b"`                                                                                              |
+| `launch_via_rungame_bat`       | `[<exe> [<directory>]]`: generate `rungame.bat` setting `SteamAppId`/`SteamGameId` to `SCB_APPID` as the launcher detected it (the Steam id on Steam, `<provider>/<id>` elsewhere; kept once written) beside `GAME_EXECUTABLE`, or beside `<exe>` in `GAME_DIRECTORY`, a relative `<directory>` under it or an absolute one, and swap `${command}` to launch through it |
 
 ### `main.sh`: launch phases
 
@@ -261,7 +277,7 @@ directories ship.
   off. With no HDR variable set, GE's DXGI detects HDR from the Wine Wayland
   output or gamescope (its `proton` script says so), and CachyOS's Wayland
   driver tags the game surface `windows_bt2100`, so the in-game HDR switch
-  works (2531310). The output surface must be HDR-capable: gamescope
+  works (2322010, 2531310). The output surface must be HDR-capable: gamescope
   `--hdr-enabled` (see `enable_gamescope`), or the Wayland driver for the
   desktop path. On NVIDIA drivers older than `595.x.x`, also install the
   vk-hdr-layer (neither build ships it) and set its `ENABLE_HDR_WSI=1`; driver
@@ -273,6 +289,9 @@ directories ship.
   skips the write if the value exists. Editing a value in a `.conf` after the
   first launch will not update the prefix until you delete the registry value or
   recreate the prefix. `set_prefix_registry_values` inherits this per entry.
+- **`symlink_directory` is destructive**: it runs `rm -rf` on the target every
+  call when the source exists. Do not point it at a directory with unrelated
+  contents.
 - **MangoHud merge tmpfiles accumulate**: each launch with a
   `mangohud/MangoHud.local.conf` or `presets.local.conf` creates a `mktemp` file
   in `$TMPDIR` (else `/tmp`) that is never removed; `/tmp` is tmpfs, emptied at
@@ -297,6 +316,10 @@ directories ship.
   writes in `games/lutris/warcraft-iii.conf`). `SCB_POST_COMMAND` sits on an
   `EXIT` trap the launcher sets after the configs ran: it runs on both paths,
   but not when a config aborts the launch.
+- **Windows-partition paths**: `WINDOWS_USER_PATH` / `WINDOWS_ROAMING_PATH`
+  resolve only when the dual-boot Windows partition is mounted.
+  `symlink_directory` no-ops with a warning when the source is missing, so the
+  game still launches.
 
 ## Variables without a helper
 
@@ -312,5 +335,6 @@ plain `export`, and appends to `command` with `command+=`.
 | `PROTON_FSR4_INDICATOR`                | both builds                                         | FSR4 debug indicator                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `MLFG_UPGRADE`                         | both builds (`amdxc64.dll`)                         | FSR4 multi-frame generation; on GE, `protonfixes` sets it to `0` when the FSR4 upgrade is off and keeps a value set here (`PROTON_MLFG_UPGRADE` reaches no reader in `GE-Proton11-12`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `DXVK_NVAPI_DRS_SETTINGS`              | both builds' `nvapi64.dll` (dxvk-nvapi)             | NVIDIA driver-profile (DRS) settings as `<setting>=<value>` pairs, a setting named by its hex id (as in `games/steam/35140.conf`) or by its name (both builds' own default, `ngx_dlss_sr_override=on,…`), applied when `nvapi64.dll` initialises: GE disables NVAPI for every title without an NVIDIA kernel driver (`nvidia`, `nouveau`, `nova`) unless `PROTON_FORCE_NVAPI=1` (`enable_nvidia_gpu`), CachyOS applies that rule only to the titles on its own list (and drops NVAPI for some others whatever the GPU) and leaves the rest to the DLL's device check; set here, it replaces whole the DLSS override defaults both builds' `protonfixes` put in it when the DLSS upgrade is on |
-| `PROTONFIXES_DISABLE`                  | both builds' `protonfixes`                          | Skip the per-game fixes and the `-pf_*` launch-option aliases; CachyOS on any value, GE on a value other than `0`; both still run their upscaler upgrades                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `WINEDLLOVERRIDES`                     | Wine; both builds append their own entries after it | DLL load order, `<dll>=n,b` to load a DLL from the game folder first (mods, `install_d3d8to9`); the export replaces any value Lutris set                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `PROTONFIXES_DISABLE`                  | both builds' `protonfixes`                          | Skip the per-game fixes and the `-pf_*` launch-option aliases (2322010 sets it to drop their `SteamDeck=1`); CachyOS on any value, GE on a value other than `0`; both still run their upscaler upgrades                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `${command}`                           | launcher                                            | The launch command, each word wrapped in double quotes by the launcher, which the launcher `eval`s after the configs; a word a config appends with `command+=" -arg"` is split again by that `eval`, so a value holding spaces needs its own quotes inside the string                                                                                                                                                                                                                                                                                                                                                                                                                         |

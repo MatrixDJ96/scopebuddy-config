@@ -138,8 +138,21 @@ __gamescope_available() {
   fi
 }
 
-# MangoHud, the gamescope flags and the framerate limit for SCB_NOSCOPE.
+__apply_proton_wayland() {
+  if [[ ${SCB_NOSCOPE} == "0" || ${SCB_GAMEMODE:-0} == "1" ]]; then
+    if [[ ${PROTON_ENABLE_WAYLAND:-0} != "0" ]]; then
+      disable_proton_wayland
+      __proton_wayland_suspended=1
+    fi
+  elif [[ ${__proton_wayland_suspended} == "1" ]]; then
+    enable_proton_wayland
+    __proton_wayland_suspended=""
+  fi
+}
+
 __apply_gamescope_mode() {
+  __apply_proton_wayland
+
   if [[ ${SCB_NOSCOPE} == "0" ]]; then
     export MANGOHUD=0
     add_gamescope_flag "--mangoapp" "-f"

@@ -26,6 +26,36 @@ EOF
   chmod +x "$KSCREEN_COMMAND"
 }
 
+test_mode_switch() {
+  enable_proton_wayland
+  enable_gamescope >/dev/null
+  check_equals "enable_gamescope" "0 0 0 [--mangoapp -f]" "$(mode_state)"
+
+  disable_gamescope >/dev/null
+  check_equals "disable_gamescope" "1 1 1 []" "$(mode_state)"
+}
+
+test_wayland_off_stays_off() {
+  disable_proton_wayland
+  enable_gamescope >/dev/null
+  disable_gamescope >/dev/null
+  check_equals "Wayland off before gamescope" "1 1 0 []" "$(mode_state)"
+
+  enable_proton_wayland
+  enable_gamescope >/dev/null
+  disable_proton_wayland
+  disable_gamescope >/dev/null
+  check_equals "Wayland off inside gamescope" "1 1 0 []" "$(mode_state)"
+}
+
+test_game_mode_clears_proton_values() {
+  SCB_GAMEMODE=1
+  export PROTON_FRAME_RATE=30 PROTON_ENABLE_WAYLAND=1
+  enable_gamescope >/dev/null
+  check_equals "Game Mode" "1 1 0 []" "$(mode_state)"
+  check_unset PROTON_FRAME_RATE
+}
+
 test_missing_gamescope_keeps_it_off() {
   GAMESCOPE_BIN=$SANDBOX/missing
   enable_proton_wayland

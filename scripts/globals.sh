@@ -17,3 +17,4 @@ __original_game_executable=""
 
 __gamescope_args=()
 __framerate_limit=""
+__proton_wayland_suspended=""

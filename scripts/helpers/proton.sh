@@ -63,6 +63,7 @@ enable_proton_wayland() {
 }
 
 disable_proton_wayland() {
+  __proton_wayland_suspended=""
   export PROTON_ENABLE_WAYLAND=0
 }
 

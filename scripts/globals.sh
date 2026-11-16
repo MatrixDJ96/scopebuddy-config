@@ -17,6 +17,7 @@ PREFIX_ROAMING_PATH="${PREFIX_USER_PATH}/AppData/Roaming"
 GAME_FILENAME=""
 GAME_DIRECTORY=""
 GAME_EXECUTABLE=""
+SCB_GAME_NATIVE=""
 
 __game_appid=""
 __game_env=""

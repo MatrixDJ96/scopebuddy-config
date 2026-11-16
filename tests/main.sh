@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Test of scripts/main.sh: profiles, layers and every tracked game config.
+# Test of scripts/main.sh: profiles, layers, entry points and every tracked game config.
 # shellcheck disable=SC2016  # fixture layers are shell code written to files
 
 # shellcheck source=lib.sh
@@ -70,12 +70,16 @@ tracked_games() {
     | sed -E "s#^$REPO_ROOT/games/(steam/)?##; s#\\.conf\$##" | sort
 }
 
-# launch_tracked_games <label>: every config with a .exe.
+# launch_tracked_games <label>
 launch_tracked_games() {
   local game
 
   for game in $(tracked_games); do
     check_status "$game $1" 0 launch_game "$game"
+  done
+
+  for game in 108600 427520 rpcs3/bces00510; do
+    check_status "$game native $1" 0 launch_game "$game" "\"$GAME_DIR/game.sh\""
   done
 }
 
@@ -146,6 +150,33 @@ test_layer_order() {
   check_unset SCB_APPID
 }
 
+test_entry_points() {
+  local profile
+
+  game_install
+  echo 'SAW="$PROFILE_SAW $GAME_FILENAME $SCB_AUTO_HDR $SCB_AUTO_RES ${SCB_NOSCOPE-}"' \
+    >"$CONFIG_DIR/games/lutris/g.conf"
+
+  for profile in scb noscope gamemode; do
+    echo 'export SCB_AUTO_HDR=1; PROFILE_SAW="$GAME_FILENAME $SCB_GAME_NATIVE"' \
+      >"$CONFIG_DIR/$profile.local.conf"
+    check_equals "$profile.conf: local layers, then game config" "Game.exe 0 Game.exe 1 1 1" "$(
+      if [[ $profile == gamemode ]]; then
+        SCB_GAMEMODE=1
+      fi
+      launch "$profile" lutris/g >/dev/null
+      echo "$SAW"
+    )"
+    check_equals "$profile.conf native: the local layer sees it" " 1" "$(
+      if [[ $profile == gamemode ]]; then
+        SCB_GAMEMODE=1
+      fi
+      launch "$profile" lutris/g "\"$GAME_DIR/game.sh\"" >/dev/null
+      echo "$PROFILE_SAW"
+    )"
+  done
+}
+
 test_tracked_games_launch() {
   local before
 
@@ -158,6 +189,23 @@ test_tracked_games_launch() {
     "$(diff <(echo "$before") <(find "$CONFIG_DIR" "$WINDOWS" -printf '%p %s\n' | sort) || true)"
   check_equals "108600 save link" "$WINDOWS/Zomboid" "$(readlink "$HOME/.local/share/Zomboid")"
   check_status "PsPcSdk emulator in the game directory" 0 test -f "$GAME_DIR/version.dll"
+}
+
+test_factorio_links_follow_launch_kind() {
+  local saves
+  local roaming="$WINEPREFIX/drive_c/users/steamuser/AppData/Roaming/Factorio"
+
+  game_install
+  saves=$WINDOWS/AppData/Roaming/Factorio
+  launch_game 427520
+  check_equals "a Windows launch links the prefix" "$saves" "$(readlink "$roaming")"
+  check_status "a Windows launch keeps ~/.factorio" 1 test -L "$HOME/.factorio"
+
+  rm "$roaming"
+  mkdir "$roaming"
+  launch_game 427520 "\"$GAME_DIR/game.sh\""
+  check_equals "a native launch links ~/.factorio" "$saves" "$(readlink "$HOME/.factorio")"
+  check_status "a native launch keeps the prefix folder" 1 test -L "$roaming"
 }
 
 # A file where the drive should be mounted makes every mkdir under it fail.

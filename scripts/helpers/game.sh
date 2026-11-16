@@ -21,9 +21,16 @@ resolve_game_executable() {
     esac
   done
 
+  if [[ -n ${GAME_EXECUTABLE} && -n ${WINEPREFIX} ]]; then
+    SCB_GAME_NATIVE=0
+  else
+    SCB_GAME_NATIVE=1
+  fi
+
   scb_log "GAME_FILENAME: '$GAME_FILENAME'"
   scb_log "GAME_DIRECTORY: '$GAME_DIRECTORY'"
   scb_log "GAME_EXECUTABLE: '$GAME_EXECUTABLE'"
+  scb_log "SCB_GAME_NATIVE: '$SCB_GAME_NATIVE'"
 }
 
 __resolve_game_context() {

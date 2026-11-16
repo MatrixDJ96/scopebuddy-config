@@ -24,6 +24,12 @@ three steps:
    actions (`games/<provider>/<id>.conf`, then its `.local.conf`). Every profile
    and game file is optional.
 
+`resolve_game_executable` sets `SCB_GAME_NATIVE` once: 0 for a Windows launch
+(an absolute `.exe` in `${command}` and a `WINEPREFIX`), 1 otherwise (a Linux
+build, an RPCS3 title). The helpers do not check `GAME_*` or `WINEPREFIX`: a
+config for a Windows-only game assumes a Windows launch, and a file serving both
+kinds branches on `SCB_GAME_NATIVE` (`games/steam/427520.conf`).
+
 Effective override order, last wins:
 `<profile>.conf → <profile>.local.conf → game.env → game.local.env → game.conf → game.local.conf`.
 
@@ -200,7 +206,7 @@ aborts the launch.
 
 | Function                  | Purpose                                                                                                                                                                                                                                       |
 | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `resolve_game_executable` | Parse `${command}` for the first absolute `/…/*.exe` path (any case); set `GAME_FILENAME`, `GAME_DIRECTORY`, `GAME_EXECUTABLE`                                                                                                                |
+| `resolve_game_executable` | Parse `${command}` for the first absolute `/…/*.exe` path (any case); set `GAME_FILENAME`, `GAME_DIRECTORY`, `GAME_EXECUTABLE`, and `SCB_GAME_NATIVE` (see Loading order)                                                                     |
 | `replace_game_executable` | Swap `GAME_EXECUTABLE` for a new path inside `${command}`; without an argument it leaves an empty `""` word in `${command}` where the executable was, and `restore_game_executable` then returns 0 but leaves that word, so pass the new path |
 | `restore_game_executable` | Revert to the executable captured on the first swap; status 1, silent, when no swap came first                                                                                                                                                |
 

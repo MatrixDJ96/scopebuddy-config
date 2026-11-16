@@ -55,6 +55,8 @@ scopebuddy/
    `games/ubisoft/<id>.conf`. Any other launcher (Lutris, RPCS3) is not
    detected: set `SCB_APPID=<provider>/<id>` in the game's environment (Lutris:
    the game's environment variables) and save as `games/<provider>/<id>.conf`.
+   A game with both a Windows and a Linux build branches on `SCB_GAME_NATIVE`, as
+   `games/steam/427520.conf` does (`docs/reference.md` § Loading order).
 3. Add helper calls. The existing files in `games/` are the working examples:
    copy the closest one and adjust.
 

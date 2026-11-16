@@ -11,6 +11,21 @@ test_exe_found_in_command() {
   check_equals "directory and name" "/games/Some Game Game.EXE" "$GAME_DIRECTORY $GAME_FILENAME"
 }
 
+test_launch_kind() {
+  command='"/games/Game.exe"'
+  resolve_game_executable >/dev/null
+  check_equals "a .exe in a prefix" 0 "$SCB_GAME_NATIVE"
+
+  WINEPREFIX=""
+  resolve_game_executable >/dev/null
+  check_equals "a .exe without a prefix" 1 "$SCB_GAME_NATIVE"
+
+  WINEPREFIX=/prefix
+  command='"/games/game.sh"'
+  resolve_game_executable >/dev/null
+  check_equals "no .exe" 1 "$SCB_GAME_NATIVE"
+}
+
 test_config_paths() {
   GAMES_PATH=$SANDBOX/games
   mkdir -p "$GAMES_PATH/steam" "$GAMES_PATH/lutris"

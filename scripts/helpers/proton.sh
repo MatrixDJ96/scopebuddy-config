@@ -13,6 +13,15 @@ _require_proton_cachyos() {
   scb_log_warning "${var_name} requires Proton-CachyOS"
 }
 
+# __upgrade_version [<version>]: 1 (the build's default) for none or latest, else <version>.
+__upgrade_version() {
+  if [[ -z ${1} || ${1,,} == "latest" ]]; then
+    echo 1
+  else
+    echo "${1}"
+  fi
+}
+
 _vkd3d_config_add() {
   local token="$1"
 
@@ -52,10 +61,12 @@ disable_proton_wow64() {
 # FSYNC off: NTSYNC takes over where /dev/ntsync exists.
 enable_proton_ntsync() {
   export PROTON_NO_FSYNC=1
+  export PROTON_NO_NTSYNC=0
 }
 
 disable_proton_ntsync() {
   export PROTON_NO_FSYNC=0
+  export PROTON_NO_NTSYNC=1
 }
 
 enable_proton_wayland() {
@@ -84,6 +95,15 @@ disable_proton_dxvk_lowlatency() {
   _require_proton_cachyos "PROTON_DXVK_LOWLATENCY" 0
 }
 
+# Proton-CachyOS only: its vkd3d-low-latency build in place of vkd3d-proton.
+enable_proton_vkd3d_lowlatency() {
+  _require_proton_cachyos "PROTON_VKD3D_LOWLATENCY" 1
+}
+
+disable_proton_vkd3d_lowlatency() {
+  _require_proton_cachyos "PROTON_VKD3D_LOWLATENCY" 0
+}
+
 # The native VK_EXT_descriptor_heap path, opt-in behind the descriptor_heap token.
 enable_proton_vkd3d_heap() {
   _vkd3d_config_add descriptor_heap
@@ -93,12 +113,28 @@ disable_proton_vkd3d_heap() {
   _vkd3d_config_remove descriptor_heap
 }
 
+# enable_proton_xess [<version>|latest]
 enable_proton_xess() {
-  export PROTON_XESS_UPGRADE=1
+  local version
+
+  version="$(__upgrade_version "${1}")"
+  export PROTON_XESS_UPGRADE="${version}"
 }
 
 disable_proton_xess() {
   export PROTON_XESS_UPGRADE=0
+}
+
+# enable_proton_fsr4 [<version>|latest]: on by default on Proton-CachyOS.
+enable_proton_fsr4() {
+  local version
+
+  version="$(__upgrade_version "${1}")"
+  export PROTON_FSR4_UPGRADE="${version}"
+}
+
+disable_proton_fsr4() {
+  export PROTON_FSR4_UPGRADE=0
 }
 
 # D3D8 through DXVK (d3d8 -> d3d9 -> Vulkan).
@@ -108,6 +144,35 @@ enable_proton_dxvk_d3d8() {
 
 disable_proton_dxvk_d3d8() {
   export PROTON_DXVK_D3D8=0
+}
+
+# DirectDraw through D7VK: CachyOS reads PROTON_D7VK_DDRAW, GE PROTON_USE_D7VK.
+enable_proton_d7vk() {
+  export PROTON_D7VK_DDRAW=1
+  export PROTON_USE_D7VK=1
+}
+
+disable_proton_d7vk() {
+  export PROTON_D7VK_DDRAW=0
+  export PROTON_USE_D7VK=0
+}
+
+# enable_proton_ffx3 [<version>|latest]: Proton-CachyOS only.
+enable_proton_ffx3() {
+  _require_proton_cachyos "PROTON_FFX3_UPGRADE" "$(__upgrade_version "${1}")"
+}
+
+disable_proton_ffx3() {
+  _require_proton_cachyos "PROTON_FFX3_UPGRADE" 0
+}
+
+# enable_proton_ffx4 [<version>|latest]: Proton-CachyOS only.
+enable_proton_ffx4() {
+  _require_proton_cachyos "PROTON_FFX4_UPGRADE" "$(__upgrade_version "${1}")"
+}
+
+disable_proton_ffx4() {
+  _require_proton_cachyos "PROTON_FFX4_UPGRADE" 0
 }
 
 enable_proton_hdr() {
@@ -162,7 +227,7 @@ enable_dlss_override() {
     set -- 0 "$@"
   fi
 
-  version="${1:-latest}"
+  version="$(__upgrade_version "${1}")"
 
   if [[ ${2} =~ ^[A-Za-z]$ ]]; then
     sr_preset="render_preset_${2,,}"
@@ -171,10 +236,6 @@ enable_dlss_override() {
     if [[ ${3} =~ ^[A-Za-z]$ ]]; then
       rr_preset="render_preset_${3,,}"
     fi
-  fi
-
-  if [[ ${version,,} == "latest" ]]; then
-    version="1"
   fi
 
   export PROTON_DLSS_UPGRADE="${version}"
@@ -186,6 +247,12 @@ enable_dlss_override() {
 
   scb_log "DLSS: PROTON_DLSS_UPGRADE=${version}" \
     "SR=${sr_preset:-<unchanged>} RR=${rr_preset:-<unchanged>}"
+}
+
+disable_dlss_override() {
+  export PROTON_DLSS_UPGRADE=0
+  unset DXVK_NVAPI_DRS_NGX_DLSS_SR_OVERRIDE_RENDER_PRESET_SELECTION
+  unset DXVK_NVAPI_DRS_NGX_DLSS_RR_OVERRIDE_RENDER_PRESET_SELECTION
 }
 
 enable_steam_deck() {

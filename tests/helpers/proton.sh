@@ -21,6 +21,21 @@ test_dlss_override() {
   dlss_case 0 render_preset_k render_preset_j k j
   dlss_case 1 render_preset_k render_preset_latest latest k
   dlss_case 310 render_preset_k render_preset_latest 310 k
+
+  enable_dlss_override k j >/dev/null
+  disable_dlss_override
+  check_equals "disable_dlss_override" "0 - -" "$PROTON_DLSS_UPGRADE ${!SR:--} ${!RR:--}"
+}
+
+test_upgrade_versions() {
+  enable_proton_xess
+  check_equals "no version" 1 "$PROTON_XESS_UPGRADE"
+
+  enable_proton_fsr4 latest
+  check_equals "latest" 1 "$PROTON_FSR4_UPGRADE"
+
+  enable_proton_xess 2.1.0
+  check_equals "a version" 2.1.0 "$PROTON_XESS_UPGRADE"
 }
 
 test_vkd3d_heap_token() {

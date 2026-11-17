@@ -1,21 +1,19 @@
 # The SCB_AUTO_* variables the launcher reads after the configs.
 
-# set_auto_refresh <0|1>
-set_auto_refresh() {
-  export SCB_AUTO_REFRESH="$1"
+enable_auto_refresh() {
+  export SCB_AUTO_REFRESH=1
 }
 
-unset_auto_refresh() {
-  unset SCB_AUTO_REFRESH
+disable_auto_refresh() {
+  export SCB_AUTO_REFRESH=0
 }
 
-# set_auto_frame_limit <0|1>
-set_auto_frame_limit() {
-  export SCB_AUTO_FRAME_LIMIT="$1"
+enable_auto_frame_limit() {
+  export SCB_AUTO_FRAME_LIMIT=1
 }
 
-unset_auto_frame_limit() {
-  unset SCB_AUTO_FRAME_LIMIT
+disable_auto_frame_limit() {
+  export SCB_AUTO_FRAME_LIMIT=0
 }
 
 enable_auto_res() {

@@ -72,22 +72,22 @@ before the `.conf` writes it into the prefix or a gamescope flag.
 
 ### `helpers/launcher.sh`: launcher `SCB_AUTO_*` variables
 
-| Function                 | Exports                                                       |
-| ------------------------ | ------------------------------------------------------------- |
-| `set_auto_refresh`       | `SCB_AUTO_REFRESH=$1` (`0` or `1`; empty without an argument) |
-| `unset_auto_refresh`     | unset `SCB_AUTO_REFRESH`                                      |
-| `set_auto_frame_limit`   | `SCB_AUTO_FRAME_LIMIT=$1` (as above)                          |
-| `unset_auto_frame_limit` | unset `SCB_AUTO_FRAME_LIMIT`                                  |
+| Function                                               | Exports                                                                                                                                                                           |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enable_auto_refresh` / `disable_auto_refresh`         | `SCB_AUTO_REFRESH` 1 / 0                                                                                                                                                          |
+| `enable_auto_frame_limit` / `disable_auto_frame_limit` | `SCB_AUTO_FRAME_LIMIT` 1 / 0                                                                                                                                                      |
+| `enable_auto_res` / `disable_auto_res`                 | `SCB_AUTO_RES` 1 / 0                                                                                                                                                              |
+| `enable_auto_vrr` / `disable_auto_vrr`                 | `SCB_AUTO_VRR` 1 / 0                                                                                                                                                              |
+| `enable_auto_hdr` / `disable_auto_hdr`                 | `SCB_AUTO_HDR` 1 / 0 (launcher: `--hdr-enabled` on the gamescope path when a KDE or GNOME display is in HDR, the Wayland and HDR exports on the no-gamescope path; see HDR below) |
 
-Both variables are booleans the launcher reads. On `1` the launcher detects the
-display and injects gamescope `-r <detected refresh>` or `--framerate-limit
-<detected refresh>`; it tests each value with `-eq 1`, so any other value leaves
-the feature off; an empty, unset or non-integer value also makes it print a `[:
-…: integer expected` line (bash 5.3; translated under a non-English locale).
-Both act on gamescope's arguments, so on the gamescope path alone, and
-`SCB_AUTO_REFRESH=1` replaces the `-r` that `set_framerate_limit` set, as
-`SCB_AUTO_RES=1` (a profile default) replaces any `-W` / `-H` a config adds. Use
-`set_framerate_limit` to cap fps at a chosen number.
+`SCB_AUTO_REFRESH` and `SCB_AUTO_FRAME_LIMIT` are booleans the launcher reads.
+On `1` the launcher detects the display and injects gamescope `-r <detected
+refresh>` or `--framerate-limit <detected refresh>`; it tests each value with
+`-eq 1`, so any other value leaves the feature off. Both act on gamescope's
+arguments, so on the gamescope path alone, and `SCB_AUTO_REFRESH=1` replaces the
+`-r` that `set_framerate_limit` set, as `SCB_AUTO_RES=1` (a profile default)
+replaces any `-W` / `-H` a config adds. Use `set_framerate_limit` to cap fps at
+a chosen number.
 
 The launcher picks the display backend for every `SCB_AUTO_*` feature: KDE, then
 GNOME, then wlroots when `jq` and `wlr-randr` are installed. On wlroots without
@@ -95,12 +95,6 @@ a gamescope `-O` output it exits with status 1, which aborts the launch, and the
 profile defaults turn `SCB_AUTO_RES` and `SCB_AUTO_VRR` on. With no backend, an
 `SCB_AUTO_*` a config sets does nothing; one set in the launch options makes the
 launcher exit 1 with an error dialog.
-
-| Function                               | Exports                                                                                                                                                                           |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `enable_auto_res` / `disable_auto_res` | `SCB_AUTO_RES` 1 / 0                                                                                                                                                              |
-| `enable_auto_vrr` / `disable_auto_vrr` | `SCB_AUTO_VRR` 1 / 0                                                                                                                                                              |
-| `enable_auto_hdr` / `disable_auto_hdr` | `SCB_AUTO_HDR` 1 / 0 (launcher: `--hdr-enabled` on the gamescope path when a KDE or GNOME display is in HDR, the Wayland and HDR exports on the no-gamescope path; see HDR below) |
 
 ### `helpers/gamescope.sh`: gamescope flags, framerate and MangoHud
 

@@ -150,8 +150,21 @@ __apply_proton_wayland() {
   fi
 }
 
+__apply_proton_steaminput() {
+  if [[ ${SCB_NOSCOPE} == "0" || ${SCB_GAMEMODE:-0} == "1" ]]; then
+    if [[ ${PROTON_NO_STEAMINPUT:-0} != "0" ]]; then
+      enable_proton_steaminput
+      __proton_steaminput_suspended=1
+    fi
+  elif [[ ${__proton_steaminput_suspended} == "1" ]]; then
+    disable_proton_steaminput
+    __proton_steaminput_suspended=""
+  fi
+}
+
 __apply_gamescope_mode() {
   __apply_proton_wayland
+  __apply_proton_steaminput
 
   if [[ ${SCB_NOSCOPE} == "0" ]]; then
     export MANGOHUD=0

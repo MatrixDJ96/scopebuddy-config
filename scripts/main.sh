@@ -22,6 +22,7 @@ apply_profile_defaults() {
   enable_proton_wow64
   enable_proton_ntsync
   enable_proton_wayland
+  disable_proton_steaminput
 
   set_mangohud_config
 

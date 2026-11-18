@@ -114,10 +114,10 @@ test_profile_defaults() {
   local expected
 
   for profile in scb noscope gamemode; do
-    expected="1 1 1 1 1 1 0 m p"
+    expected="1 1 1 1 1 1 1 0 m p"
 
     if [[ $profile == gamemode ]]; then
-      expected="1 0 1 1 1 1 0 m p"
+      expected="1 0 0 1 1 1 1 0 m p"
     fi
 
     check_equals "$profile defaults" "$expected" "$(
@@ -125,7 +125,8 @@ test_profile_defaults() {
         SCB_GAMEMODE=1
       fi
       apply_profile_defaults "$profile" >/dev/null
-      echo "${SCB_NOSCOPE-} ${PROTON_ENABLE_WAYLAND-} $PROTON_USE_WOW64 $PROTON_NO_FSYNC" \
+      echo "${SCB_NOSCOPE-} ${PROTON_ENABLE_WAYLAND-} ${PROTON_NO_STEAMINPUT-}" \
+        "$PROTON_USE_WOW64 $PROTON_NO_FSYNC" \
         "$SCB_AUTO_RES $SCB_AUTO_VRR $SCB_AUTO_HDR" \
         "${MANGOHUD_CONFIGFILE:+m} ${MANGOHUD_PRESETSFILE:+p}"
     )"

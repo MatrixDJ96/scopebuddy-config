@@ -84,6 +84,15 @@ disable_proton_wayland() {
   export PROTON_ENABLE_WAYLAND=0
 }
 
+enable_proton_steaminput() {
+  __proton_steaminput_suspended=""
+  export PROTON_NO_STEAMINPUT=0
+}
+
+disable_proton_steaminput() {
+  export PROTON_NO_STEAMINPUT=1
+}
+
 enable_proton_dxvk_lowlatency() {
   _require_proton_cachyos "PROTON_DXVK_LOWLATENCY" 1
 }

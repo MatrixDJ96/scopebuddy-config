@@ -148,7 +148,25 @@ test_layer_order() {
   SCB_APPID=lutris/g
   load_game_configs >/dev/null
   check_equals "layers" " env local.env conf local.conf" "$LAYERS"
-  check_unset SCB_APPID
+}
+
+steam_input_env() {
+  GAMES_PATH=$SANDBOX/games
+  mkdir -p "$GAMES_PATH/lutris"
+  echo "$1" >"$GAMES_PATH/lutris/g.conf"
+
+  export SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD=a
+  export SDL_GAMECONTROLLER_IGNORE_DEVICES=i
+  export SteamVirtualGamepadInfo=v
+  SCB_APPID=lutris/g
+  load_game_configs >/dev/null
+  echo "${SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD--}" \
+    "${SDL_GAMECONTROLLER_IGNORE_DEVICES--} ${SteamVirtualGamepadInfo--}"
+}
+
+test_steam_input_off_releases_the_pad() {
+  check_equals "Steam Input off" "- - -" "$(steam_input_env disable_proton_steaminput)"
+  check_equals "Steam Input on" "a i v" "$(steam_input_env enable_proton_steaminput)"
 }
 
 test_entry_points() {

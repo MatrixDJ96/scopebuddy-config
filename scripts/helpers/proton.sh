@@ -93,6 +93,14 @@ disable_proton_steaminput() {
   export PROTON_NO_STEAMINPUT=1
 }
 
+__drop_steam_input_env() {
+  if [[ ${PROTON_NO_STEAMINPUT:-0} != "0" ]]; then
+    unset SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD
+    unset SDL_GAMECONTROLLER_IGNORE_DEVICES
+    unset SteamVirtualGamepadInfo
+  fi
+}
+
 enable_proton_dxvk_lowlatency() {
   _require_proton_cachyos "PROTON_DXVK_LOWLATENCY" 1
 }

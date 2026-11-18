@@ -43,7 +43,6 @@ apply_profile_defaults() {
   esac
 }
 
-# load_game_configs: unsets SCB_APPID so the launcher's own AppID/<id>.conf is not found.
 load_game_configs() {
   __resolve_game_context
 
@@ -52,5 +51,5 @@ load_game_configs() {
   source_if_exists "${__game_config}"
   source_if_exists "${__game_local_config}"
 
-  unset SCB_APPID
+  __drop_steam_input_env
 }

@@ -10,7 +10,7 @@ there is no build, and an edit is live at the next launch on every host that pul
 tools/lint.sh            # shellcheck over the shell sources, the *.local.* layers excluded
 tools/format.sh --check  # shfmt diff; bare, it rewrites the files in place
 tools/check-form.sh      # line width and the banned shell shapes
-tools/check-docs.sh      # docs/reference.md helper tables against scripts/, both ways
+tools/check-docs.sh      # docs/helpers/ and docs/architecture/ tables vs scripts/, both ways
 tests/run.sh             # every test; no real prefix, no network where `unshare -rn` works
 ```
 
@@ -26,8 +26,8 @@ All five run before every commit; after editing `tools/check-form.sh`, `tools/ch
   read by a game config, the launcher, Proton or a Vulkan layer (MangoHud): add a helper, never
   rename one.
 - A machine-specific value goes in a gitignored `*.local.env` or `*.local.conf`, never in a
-  tracked file; a value a game `.conf` acts on goes in the `.env` pair (`docs/reference.md` §
-  Loading order).
+  tracked file; a value a game `.conf` acts on goes in the `.env` pair
+  (`docs/architecture/loading-order.md` § Override order).
 - `scripts/**/*.sh`, `games/**/*.{env,conf}` and the entry points are sourced into the
   launcher's shell: they set no shell option, and a public helper returns non-zero only where
   the launch must stop, since at a config's top level that status aborts it (a `__` predicate
@@ -40,9 +40,7 @@ All five run before every commit; after editing `tools/check-form.sh`, `tools/ch
   under `pipefail` and `set -e` the other forms fail, print twice or escape errexit.
   `tools/check-form.sh` reads the rules its header lists, review reads the rest; a line holding
   a banned shape as data ends in `# form: literal`.
-- `scripts/` follows the launcher's sections: fixed values in `constants.sh`, values from the
-  launch environment and the launch state in `globals.sh`, helpers by topic in `helpers/`, the
-  launch phases in `main.sh`.
+- `scripts/` follows the launcher's sections: `docs/architecture/framework.md` § Scripts.
 - A module opens with one sentence saying what it provides; a helper or state variable no game
   config, `.local` layer or entry point is meant to call or touch starts with `__` (`_` is kept
   by three `proton.sh` helpers; do not add more).
@@ -54,6 +52,8 @@ All five run before every commit; after editing `tools/check-form.sh`, `tools/ch
   setter gets none. Each scenario is a `test_*` function that `run_tests` runs in its own
   `load_framework` sandbox, its fixtures are named functions, and the file ends with
   `run_tests`.
+- A public function gets a row in a function table of `docs/helpers/` or `docs/architecture/`,
+  whose first cell names it: `tools/check-docs.sh` reads only the tables of those two folders.
 - A guard (`tools/check-form.sh`, `tools/check-docs.sh`, `tests/run.sh`) ships a `--self-test`
   that feeds it known-bad input and requires the failure.
 - Every file is in English.
@@ -65,6 +65,7 @@ All five run before every commit; after editing `tools/check-form.sh`, `tools/ch
 
 ## Docs
 
-- `README.md`: how the launcher loads this checkout, the layout, adding a game config, the
-  local overrides and the requirements.
-- `docs/reference.md`: read before calling or changing a helper.
+- `docs/README.md`: read first to find which doc covers a task.
+- `docs/helpers/<topic>.md`: read before calling or changing a helper of
+  `scripts/helpers/<topic>.sh`; `log.sh` is in `docs/architecture/framework.md`, `main.sh` in
+  `docs/architecture/loading-order.md`.

@@ -26,11 +26,11 @@ days.
 
 Gamescope and standalone MangoHud are mutually exclusive: do not `export MANGOHUD=1` in a
 config that calls `enable_gamescope`. For an OpenGL game without gamescope, prepend the
-`mangohud` wrapper to `command`: it preloads MangoHud's OpenGL shim (not for `cs2.sh` or
-`RiseOfTheTombRaider.sh`) and runs the command with `MANGOHUD=1` whatever the config exported
-(the installed 0.8.4 wrapper takes `--dlsym` as a no-op).
+`mangohud` wrapper to `command`: it preloads MangoHud's OpenGL shim (not on a command line
+containing `cs2.sh` or `RiseOfTheTombRaider.sh`) and runs the command with `MANGOHUD=1`
+whatever the config exported (the installed 0.8.4 wrapper takes `--dlsym` as a no-op).
 
-## A launcher window turns black
+## A game launcher's window turns black
 
 The Minecraft launcher started as `mangohud <launcher>` from a game config comes up as a black
 CEF window: the MangoHud wrapper on a launcher command blacks out its window. A Vulkan game

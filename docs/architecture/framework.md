@@ -42,7 +42,7 @@ compatibility and the overlay.
 | `MANGOHUD_PATH`, `VKBASALT_PATH`, `ASSETS_PATH`, `GAMES_PATH`                                                        | subdirs of `SCOPEBUDDY_PATH`                    |
 | `PSPCSDK_EMULATOR_PATH`, `PHYSX_LEGACY_BINARY`                                                                       | bundled assets under `ASSETS_PATH`              |
 | `D3D8TO9_VERSION`                                                                                                    | the d3d8to9 release `install_d3d8to9` downloads |
-| `SCB_PREFIX_COLOR`, `SCB_SUCCESS_COLOR`, `SCB_WARNING_COLOR`, `SCB_ERROR_COLOR`, `SCB_INFO_COLOR`, `SCB_RESET_COLOR` | ANSI colors of the `[SCB]` log lines            |
+| `SCB_PREFIX_COLOR`, `SCB_SUCCESS_COLOR`, `SCB_WARNING_COLOR`, `SCB_ERROR_COLOR`, `SCB_INFO_COLOR`, `SCB_RESET_COLOR` | ANSI codes of the `[SCB]` log lines             |
 
 ### Globals (`globals.sh`)
 
@@ -62,8 +62,8 @@ compatibility and the overlay.
 `${STEAM_COMPAT_DATA_PATH}/pfx`, else empty. Built from `STEAM_COMPAT_DATA_PATH` it is not
 exported: only the `helpers/wine.sh` helpers pass it to a command.
 
-The Windows-partition paths resolve only when that partition is mounted
-([pitfalls](../pitfalls.md#a-save-folder-is-not-linked)).
+Before using the Windows-partition paths:
+[a save folder is not linked](../pitfalls.md#a-save-folder-is-not-linked).
 
 ### Logging and sourcing (`helpers/log.sh`)
 

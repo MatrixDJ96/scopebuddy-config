@@ -11,7 +11,8 @@ Index of the docs: each line says when to read its file.
 
 ## Helpers
 
-- [Launcher](helpers/launcher.md): read before setting an `SCB_AUTO_*` toggle.
+- [Launcher](helpers/launcher.md): read before setting an `SCB_AUTO_*` toggle, or when a launch
+  exits 1 on a display backend.
 - [Gamescope](helpers/gamescope.md): read before switching gamescope on or off, adding a flag,
   capping the framerate or changing the MangoHud files.
 - [Proton](helpers/proton.md): read before calling a Proton, DXVK, vkd3d, upscaler or GPU

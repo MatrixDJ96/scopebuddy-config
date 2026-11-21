@@ -31,5 +31,6 @@ How to give a game its own config file and check that the launch reads it.
    launch the launcher does not detect (Lutris without `SCB_APPID`) arrives as `null` and
    resolves to `games/steam/null.conf`.
 
-A value that differs per machine goes in the game's `.local.env` or `.local.conf`
+A value that differs per machine goes in the game's `.local.env` when the config reads it, else
+in its `.local.conf`
 ([local layers](../architecture/loading-order.md#local-layers)).

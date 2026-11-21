@@ -10,9 +10,9 @@ output surface needs.
 Both builds' `dxgi.dll` and `winewayland.so` read `DXVK_HDR` and `DXVK_NO_HDR`
 (`enable_proton_hdr` / `disable_proton_hdr`), and their `winex11.so` reads `DXVK_HDR` (GE's
 `DXVK_NO_HDR` too). On CachyOS the DXGI readers are the stock and low-latency DXVKs: the Sarek
-DXVK reads neither variable ([CachyOS and GE differences](builds.md#cachyos-and-ge)).
+DXVK reads neither variable ([CachyOS and GE](builds.md#cachyos-and-ge)).
 
-### GE aliases
+### GE variables
 
 GE also accepts the `PROTON_ENABLE_HDR` and `PROTON_USE_HDR` aliases, and its `proton` script
 writes over what `enable_proton_hdr` / `disable_proton_hdr` set: a non-zero alias

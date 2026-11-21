@@ -1,6 +1,7 @@
 # Loading order
 
-Which files a launch sources, in which order, and which layer a value belongs in.
+Which files a launch sources, in which order, which layer a value belongs in, and how a launch
+ends up in gamescope or standalone MangoHud.
 
 ## How it works
 
@@ -64,7 +65,7 @@ On the desktop the `scb` and `noscope` profiles start in standalone-MangoHud mod
 config opts into gamescope with `enable_gamescope`. The defaults overwrite the same variables
 set in the launch options: set those in a `.local.conf` instead.
 
-### Game Mode
+### Game Mode and `SCB_NOSCOPE`
 
 - In Game Mode the launcher forces `SCB_NOSCOPE=1` before the configs and `MANGOHUD=0` after
   them, but branches on `SCB_NOSCOPE` only after the configs ran, so a config that set it to 0

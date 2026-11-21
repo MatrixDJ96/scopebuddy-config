@@ -19,13 +19,13 @@ operator and writes DPI 4.
 
 ## Reference
 
-| Function                      | Purpose                                                                                                                                 |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `execute_prefix_command`      | Run a command inside `WINEPREFIX` with wine on `PATH`                                                                                   |
-| `execute_prefix_command_once` | `<name> <command>...`: the same, gated by a `${WINEPREFIX}/.<name>` flag file; logs an error on failure                                 |
-| `execute_prefix_wine`         | `<name> <program> [<argument>...]`: run a program once                                                                                  |
-| `execute_prefix_winetricks`   | `<name> <verb>...`: run winetricks verbs once                                                                                           |
-| `set_prefix_dpi_value`        | Write `LogPixels` (DPI, 96 without an argument) to the registry, on every call                                                          |
-| `set_prefix_dpi_scale`        | Convert a percentage or a factor to DPI, then `set_prefix_dpi_value`                                                                    |
-| `set_prefix_registry_value`   | `<key> <name> <type> <data>`: write one registry value, set-once ([pitfalls](../pitfalls.md#a-registry-edit-does-not-reach-the-prefix)) |
-| `set_prefix_registry_values`  | Write several `name\|type\|data` entries under one key                                                                                  |
+| Function                      | Purpose                                                                                                                                                                            |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `execute_prefix_command`      | Run a command inside `WINEPREFIX` with wine on `PATH`                                                                                                                              |
+| `execute_prefix_command_once` | `<name> <command>...`: the same, gated by a `${WINEPREFIX}/.<name>` flag file; logs an error on failure                                                                            |
+| `execute_prefix_wine`         | `<name> <program> [<argument>...]`: run a program once                                                                                                                             |
+| `execute_prefix_winetricks`   | `<name> <verb>...`: run winetricks verbs once                                                                                                                                      |
+| `set_prefix_dpi_value`        | Write `LogPixels` (DPI, 96 without an argument) to the registry, on every call                                                                                                     |
+| `set_prefix_dpi_scale`        | Convert a percentage or a factor to DPI, then `set_prefix_dpi_value`                                                                                                               |
+| `set_prefix_registry_value`   | `<key> <name> <type> <data>`: write one registry value, set-once ([a registry edit does not reach the prefix](../pitfalls.md#a-registry-edit-does-not-reach-the-prefix))           |
+| `set_prefix_registry_values`  | Write several `name\|type\|data` entries under one key, set-once per entry ([a registry edit does not reach the prefix](../pitfalls.md#a-registry-edit-does-not-reach-the-prefix)) |

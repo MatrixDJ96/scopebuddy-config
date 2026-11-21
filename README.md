@@ -8,11 +8,12 @@ ScopeBuddy sources at launch.
 ## Stack
 
 - ScopeBuddy launcher at `/usr/bin/scopebuddy`, and Proton-CachyOS or Proton-GE
-  ([tested versions](docs/proton/builds.md)).
+  ([tested versions](docs/proton/builds.md#tested-versions)).
 - Bash, sourced into the launcher's shell: no build step.
 - Git LFS for `assets/`.
 - Optional: a dual-boot Windows partition mounted at `/run/media/$USER/Windows` for configs
-  that symlink save data ([pitfalls](docs/pitfalls.md#a-save-folder-is-not-linked)).
+  that symlink save data
+  ([a save folder is not linked](docs/pitfalls.md#a-save-folder-is-not-linked)).
 
 ## Start
 

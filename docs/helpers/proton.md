@@ -5,14 +5,11 @@ The `helpers/proton.sh` helpers: Proton, DXVK, vkd3d-proton, upscaler and GPU va
 ## Sections
 
 - How it works: the CachyOS-only gate · upscaler upgrades · sync · Wayland and Steam Input ·
-  Reflex · DXVK low latency · vkd3d descriptor heaps · NVIDIA GPU · Intel GPU and Steam Deck ·
-  D7VK · DLSS override and indicator
+  Reflex · DXVK and vkd3d low latency · vkd3d descriptor heaps · NVIDIA GPU · Intel GPU and
+  Steam Deck · D7VK · DLSS override and indicator
 - Reference: Proton, DXVK and vkd3d · GPU, DLSS and Steam Deck
 
 ## How it works
-
-How the two Proton builds differ for each variable:
-[CachyOS and GE differences](../proton/builds.md).
 
 ### The CachyOS-only gate
 
@@ -24,12 +21,13 @@ not contain `cachyos` in any case; the launch goes on.
 The upscaler upgrades (`enable_proton_xess`, `enable_proton_fsr4`, `enable_proton_ffx3`,
 `enable_proton_ffx4`, `enable_dlss_override`) share one version rule: no argument, `latest` or
 `1` exports `1`, the build's default version; `0` exports `0` (the upgrade off), and any other
-value names the version protonfixes downloads; each logs the value it exports.
+value names the version the build's `protonfixes` scripts download; each logs the value it
+exports.
 
-`enable_proton_fsr4` upgrades FSR for titles shipping an older FSR; how the builds' defaults
-differ: [CachyOS and GE differences](../proton/builds.md#cachyos-and-ge).
+`enable_proton_fsr4` upgrades titles shipping an older FSR to FSR4; how the builds' defaults
+differ: [CachyOS and GE](../proton/builds.md#cachyos-and-ge).
 
-`enable_proton_ffx3` makes protonfixes download the FidelityFX SDK FSR 3.1 DLLs
+`enable_proton_ffx3` makes `protonfixes` download the FidelityFX SDK FSR 3.1 DLLs
 (`amd_fidelityfx_vk.dll`, `amd_fidelityfx_dx12.dll`) at launch; `enable_proton_ffx4` the
 FidelityFX SDK FSR 4 DX12 DLLs (upscaler, frame generation, loader).
 
@@ -46,15 +44,19 @@ Both builds switch to the Wayland driver only when `WAYLAND_DISPLAY` is set, and
 
 At `PROTON_NO_STEAMINPUT=1` a controller reaches the game natively (a DualSense as itself); at
 0 the game gets Steam's virtual XInput pad when its Steam Input toggle is on. A game config
-calls `enable_proton_steaminput` to keep Steam Input on Wayland.
+calls `enable_proton_steaminput` to keep Steam Input on Wayland. With Steam Input off,
+`load_game_configs` drops Steam's pad variables
+([launch phases](../architecture/loading-order.md#launch-phases-mainsh)). The builds differ on
+the Steam overlay and on Steam Input under Wayland
+([CachyOS and GE](../proton/builds.md#cachyos-and-ge)).
 
 ### Reflex
 
-Both builds load the Reflex layer only when the `nvidia` kernel module is loaded and NVAPI is
-not disabled (`PROTON_DISABLE_NVAPI`, or a title on the build's own disable-NVAPI list;
-`PROTON_FORCE_NVAPI` does not lift it).
+`enable_proton_vkreflex` makes both builds load the Reflex layer only when the `nvidia` kernel
+module is loaded and NVAPI is not disabled (`PROTON_DISABLE_NVAPI`, or a title on the build's
+own disable-NVAPI list; `PROTON_FORCE_NVAPI` does not lift it).
 
-### DXVK low latency
+### DXVK and vkd3d low latency
 
 Enabling `PROTON_DXVK_LOWLATENCY` on CachyOS installs that build's `dxvk-low-latency` DXVK in
 place of the stock one (a non-zero `PROTON_DXVK_SAREK` wins, as does the Sarek DXVK the build
@@ -74,8 +76,9 @@ tokens it already holds (launch options, an earlier layer); Proton appends
 `PROTON_ADD_CONFIG` names `vkd3dbindlesstb`.
 
 The native `VK_EXT_descriptor_heap` path avoids Xid 109 crashes on NVIDIA Blackwell (RTX 50xx)
-with driver 595+. Both builds ship vkd3d-proton 3.1.0 and carry the extension, and both keep it
-opt-in behind the `descriptor_heap` token while NVIDIA driver bugs remain open upstream.
+with driver 595+. Both builds ship the vkd3d-proton of the
+[tested versions](../proton/builds.md#tested-versions) and carry the extension, and both keep
+it opt-in behind the `descriptor_heap` token while NVIDIA driver bugs remain open upstream.
 Confirm which path a game took by launching with `VKD3D_DEBUG=info` and looking for the
 `VK_EXT_descriptor_heap enabled` line.
 
@@ -87,23 +90,24 @@ calls `enable_nvidia_gpu` in its `<profile>.local.conf`.
 
 ### Intel GPU and Steam Deck
 
-`PROTON_HIDE_INTEL_GPU=0` also shows the iGPU to a title the build hides it from (both builds'
-own list).
+`enable_intel_gpu` (`PROTON_HIDE_INTEL_GPU=0`) shows the iGPU to a title the build hides it
+from (both builds' own list).
 
-`SteamDeck` is read by the game and both Proton builds; a title's protonfixes can force 1 over
-it ([`PROTONFIXES_DISABLE`](../proton/variables.md#protonfixes)).
+`SteamDeck` is read by the game and both Proton builds; a title's `protonfixes` can force 1
+over it ([`PROTONFIXES_DISABLE`](../proton/variables.md#protonfixes-and-its-downloads)).
 
 ### D7VK
 
-`enable_proton_d7vk` runs DirectDraw and D3D7 through D7VK's `ddraw.dll`.
+`enable_proton_d7vk` runs DirectDraw and D3D7 through D7VK's `ddraw.dll`. It exports both names
+because CachyOS reads `PROTON_D7VK_DDRAW` and GE `PROTON_USE_D7VK`.
 
 ### DLSS override and indicator
 
 `enable_dlss_override` is overloaded on its arguments, in two branches:
 
-- A lone letter (`enable_dlss_override k`) applies the SR preset and exports
-  `PROTON_DLSS_UPGRADE=0`, so the preset lands while the DLL upgrade stays off. A second letter
-  on this branch is the RR preset.
+- A lone letter (`enable_dlss_override k`) applies the DLSS Super Resolution (SR) preset and
+  exports `PROTON_DLSS_UPGRADE=0`, so the preset lands while the DLL upgrade stays off. A
+  second letter on this branch is the Ray Reconstruction (RR) preset.
 - Anything else is the DLSS version ([upscaler upgrades](#upscaler-upgrades)); a letter after
   it is the SR preset and a further letter the RR preset.
 
